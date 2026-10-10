@@ -8,5 +8,6 @@ resources:
   - postgres-cluster.yaml
   - postgres-podmonitor.yaml
   - helmrelease.yaml
+  - valkey-helmrelease.yaml
 components:
   - ../../../components/helmrelease

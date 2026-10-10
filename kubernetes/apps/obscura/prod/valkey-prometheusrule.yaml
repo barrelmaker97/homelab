@@ -1,0 +1,79 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: obscura-valkey
+  namespace: obscura
+spec:
+  groups:
+    - name: obscura-valkey.availability
+      rules:
+        - alert: ValkeyDown
+          expr: >-
+            (
+              max(
+                redis_up{
+                  namespace="obscura",
+                  job="valkey-metrics"
+                }
+              )
+              or vector(0)
+            ) < 1
+          for: 2m
+          labels:
+            severity: warning
+            namespace: obscura
+          annotations:
+            summary: >-
+              Valkey obscura/valkey is unavailable
+            description: >-
+              The exporter cannot reach Valkey, or the pod is not running.
+              Realtime delivery and push notifications are stopped.
+
+    - name: obscura-valkey.operations
+      rules:
+        - alert: ValkeyPersistenceFailing
+          expr: >-
+            redis_aof_last_write_status{
+              namespace="obscura",
+              job="valkey-metrics"
+            } < 1
+            or
+            redis_aof_last_bgrewrite_status{
+              namespace="obscura",
+              job="valkey-metrics"
+            } < 1
+          for: 2m
+          labels:
+            severity: warning
+            namespace: obscura
+          annotations:
+            summary: >-
+              Valkey obscura/valkey is failing to write its AOF
+            description: >-
+              The last AOF write or rewrite failed, so a restart would lose
+              recent queued jobs and idempotency keys.
+
+        - alert: ValkeyMemoryHigh
+          expr: >-
+            redis_memory_used_bytes{
+              namespace="obscura",
+              job="valkey-metrics"
+            }
+            /
+            (
+              redis_memory_max_bytes{
+                namespace="obscura",
+                job="valkey-metrics"
+              } > 0
+            ) > 0.8
+          for: 5m
+          labels:
+            severity: warning
+            namespace: obscura
+          annotations:
+            summary: >-
+              Valkey obscura/valkey is above 80% of maxmemory
+            description: >-
+              maxmemory-policy is noeviction, so writes will fail once
+              memory reaches maxmemory.

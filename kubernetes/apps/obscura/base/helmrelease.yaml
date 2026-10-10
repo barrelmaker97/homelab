@@ -6,6 +6,9 @@ metadata:
   namespace: obscura
 spec:
   releaseName: obscura
+  # Valkey must be up before the server rolls over to it.
+  dependsOn:
+    - name: valkey
   # Each overlay sets the chart, so dev can run a version before prod.
   values:
     replicaCount: 3
@@ -31,6 +34,10 @@ spec:
         existingSecret:
           name: obscura-postgres-app
           key: uri
+      pubsub:
+        existingSecret:
+          name: obscura-valkey
+          key: url
       auth:
         existingSecret:
           name: obscura-server-secrets
@@ -67,13 +74,9 @@ spec:
       limits:
         memory: 256Mi
 
+    # Valkey runs as its own release; see valkey-helmrelease.yaml.
     valkey:
-      resources:
-        requests:
-          cpu: 10m
-          memory: 32Mi
-        limits:
-          memory: 128Mi
+      enabled: false
 
     httpRoute:
       enabled: true
