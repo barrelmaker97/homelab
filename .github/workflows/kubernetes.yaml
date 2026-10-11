@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v5.1.1
         with:
-          version: 2026.10.7
+          version: 2026.10.8
           install_args: "kubectl kubeconform"
       - name: Build and validate
         # shell: bash adds pipefail, so a failed build cannot hand kubeconform
@@ -52,7 +52,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v5.1.1
         with:
-          version: 2026.10.7
+          version: 2026.10.8
           install_args: "github:home-operations/flate"
       - name: Render and test the whole cluster
         run: flate test all --path ./kubernetes
@@ -75,7 +75,7 @@ jobs:
           fetch-depth: 0
       - uses: jdx/mise-action@v5.1.1
         with:
-          version: 2026.10.7
+          version: 2026.10.8
           install_args: "github:home-operations/flate"
       - name: Diff rendered output
         env:
