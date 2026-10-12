@@ -13,13 +13,6 @@ mise install          # the pinned tools
 mise run collections  # the Ansible collections in ansible/requirements.yml
 ```
 
-Ansible commands and ansible-lint share one Python environment, with
-ansible-core pinned once and the Kubernetes Python library installed alongside
-it. Python and uv provide the interpreter and installer for that environment.
-When updating an existing checkout from the separate Ansible installations,
-run `mise install --force pypi:ansible-lint` once to rebuild the environment
-with the exposed Ansible commands.
-
 ## Checks
 Local checks and CI run the same mise tasks. No check applies changes to hosts
 or the cluster:
@@ -36,9 +29,7 @@ but do not require a running cluster or secret decryption. Schema validation
 skips Secrets, as in CI.
 
 The diff task accepts flate flags, for example
-`mise run kubernetes:diff --base origin/main --output github`. CI installs only
-the tools needed by each job and disables task auto-installation so a check
-does not pull in the rest of the workstation tools.
+`mise run kubernetes:diff --base origin/main --output github`.
 
 # Secrets
 Secrets are sops files encrypted with age (rules in `.sops.yaml`). The personal
@@ -63,9 +54,10 @@ rendered diff, and merging deploys it; nothing automerges.
 - Major updates wait on the Dependency Dashboard issue until ticked.
 - kubectl gets patches only; it follows the cluster (see Cluster Upgrade).
 - PostgreSQL major versions are disabled: they are data migrations.
-- Obscura's dev overlay is its staging environment: a chart update arrives
-  for dev first, and for prod in a separate PR three days later. Merge prod's
-  only once the version has run in dev.
+- Obscura's dev overlay is its staging environment. Dev and prod chart updates
+  get separate PRs; prod waits until the upstream release is at least three
+  days old, not three days after deployment to dev. Merge prod's only once the
+  version has run in dev.
 
 # Running Playbooks
 Playbooks run from `ansible/`, where its `ansible.cfg`, inventory and
@@ -100,12 +92,12 @@ Flux manages itself: upgrade Flux or its operator by editing
 
 | Path                                | Contents                                                  |
 |-------------------------------------|-----------------------------------------------------------|
-| `kubernetes/clusters/poseidon`      | Flux itself (`flux-system/`), chart sources, and one Flux Kustomization per directory below. Settings they all share are a patch in `kustomization.yaml` |
+| `kubernetes/clusters/poseidon`      | Flux itself (`flux-system/`), chart sources, and the infrastructure/app Flux Kustomizations |
 | `kubernetes/infrastructure/<layer>` | Platform layers, ordered bottom up by `dependsOn` in `infrastructure.yaml` |
 | `kubernetes/apps/<app>`             | The app's HelmRelease, plus its namespace, database and alerts where it owns them |
 | `kubernetes/apps/barrelmaker`       | The namespace most apps share, with its quota and limit range |
-| `kubernetes/apps/obscura`           | Obscura as a `base` with `prod` and `dev` overlays; dev is its staging environment (see Updates) |
-| `kubernetes/components/helmrelease` | The settings every HelmRelease shares, listed under `components` beside each one |
+| `kubernetes/apps/obscura`           | Obscura's shared `base` and `prod`/`dev` overlays |
+| `kubernetes/components/helmrelease` | Shared HelmRelease reconciliation settings |
 
 ## How deploys work
 - Merging to `main` deploys. Before merge, CI validates every kustomization's
@@ -115,10 +107,7 @@ Flux manages itself: upgrade Flux or its operator by editing
   rendered diff on the PR. Preview locally with
   `mise run kubernetes:diff`.
 - Manifests hold literal values, apart from a few kustomize patches and
-  generators; the rendered diff shows what will actually be applied. The
-  settings every HelmRelease shares are one kustomize component,
-  `kubernetes/components/helmrelease`, so a HelmRelease file holds only its
-  chart, values and `dependsOn`.
+  generators; the rendered diff shows what will actually be applied.
 - HelmReleases fail forward: a failed install or upgrade is retried as written
   every 15 minutes and never rolled back, so the cluster does not drift from
   Git. Fix forward with a commit, or `git revert`. A StatefulSet stuck on a bad
@@ -130,26 +119,18 @@ Flux manages itself: upgrade Flux or its operator by editing
   Clusters carry `kustomize.toolkit.fluxcd.io/prune: disabled`, so deleting
   their files never deletes their data.
 - Failed reconciliations post to Discord. Alertmanager also alerts when a Flux
-  object stays not ready or a controller is down (`prometheusrule-flux.yaml`),
-  so a broken Flux cannot fail silently.
+  object stays not ready or a controller is down (`prometheusrule-flux.yaml`).
 - Flux cannot be pointed at a branch to test it: it syncs its own FluxInstance,
   which would point it back at `main`. Preview against the cluster with
   `flux diff kustomization` instead.
 
 ## CoreDNS availability
-Talos bootstraps CoreDNS, including its Deployment, image, Corefile, Service
-and RBAC. The `coredns` infrastructure layer manages only a separate
-PodDisruptionBudget; it does not modify Talos's Deployment or scheduling rules.
-
-The PDB requires one ready DNS replica during eviction-based maintenance.
-Use normal PDB-respecting drains rather than manually deleting CoreDNS pods;
-if a drain blocks, recover DNS before proceeding. The PDB does not protect
-against node failure, direct deletion or Deployment rolling updates.
-
-Talos's two DNS replicas prefer separate hostnames, but this is not guaranteed.
-If both land on one node, the PDB protects a normal drain but not an abrupt
-failure of that node. After maintenance or Talos/Kubernetes upgrades, verify
-DNS readiness and placement and that the `coredns` Flux Kustomization is healthy.
+Talos owns CoreDNS; this repo adds a PodDisruptionBudget requiring one ready
+replica during drains. Respect the PDB and recover DNS if a drain blocks. It
+does not protect against node failure, direct pod deletion or Deployment
+rolling updates. The two replicas may share a node, so after maintenance or
+upgrades, check DNS readiness and placement and the `coredns` Flux
+Kustomization's health.
 
 ## Adding an app
 1. Create `kubernetes/apps/<app>/` with a `kustomization.yaml` and the app's
@@ -245,21 +226,21 @@ and shuts everything down for real.
    ansible-playbook setup.yaml
    ```
 2. Boot the nodes from the ISO, then apply the configs and bootstrap etcd.
-   `setup.yaml` writes the configs to `talos_config_dir`, which defaults to
-   `.talos` under the Ansible controller's `HOME` on Linux or macOS. Override
-   it with `-e talos_config_dir=/path/to/configs` if needed:
+   `setup.yaml` writes configs to `~/.talos` by default; override it with
+   `-e talos_config_dir=/path/to/configs` if needed. Stay in `ansible/` so mise
+   keeps the tools active, and set `CONFIG_DIR` to the chosen path:
    ```bash
-   cd ~/.talos
+   CONFIG_DIR="$HOME/.talos"
 
    # Node 1
-   talosctl -n node1-poseidon.lan apply-config --insecure --file node1-poseidon.yaml
+   talosctl -n node1-poseidon.lan apply-config --insecure --file "$CONFIG_DIR/node1-poseidon.yaml"
    talosctl -n node1-poseidon.lan -e node1-poseidon.lan bootstrap
 
    # Node 2
-   talosctl -n node2-poseidon.lan apply-config --insecure --file node2-poseidon.yaml
+   talosctl -n node2-poseidon.lan apply-config --insecure --file "$CONFIG_DIR/node2-poseidon.yaml"
 
    # Node 3
-   talosctl -n node3-poseidon.lan apply-config --insecure --file node3-poseidon.yaml
+   talosctl -n node3-poseidon.lan apply-config --insecure --file "$CONFIG_DIR/node3-poseidon.yaml"
    ```
 3. Create the cluster user and the local kubeconfig, from `ansible/`:
    ```bash
@@ -292,8 +273,7 @@ talosctl -e node1-poseidon.lan -n node3-poseidon.lan upgrade --image "$IMAGE"
 talosctl -n node1-poseidon.lan upgrade-k8s --dry-run
 talosctl -n node1-poseidon.lan upgrade-k8s
 ```
-Then bump kubectl in `mise.toml` to the new version, and after a minor upgrade
-of either, any globally installed talosctl or kubectl too.
+Then bump kubectl in `mise.toml` to the new version and run `mise install`.
 
 # License
 GPL-3.0-or-later; see `LICENSE`.

@@ -97,7 +97,7 @@
       commitMessageSuffix: '(dev)',
     },
     {
-      description: 'Obscura prod gets a chart update three days after dev, so it runs in dev first',
+      description: 'Obscura prod chart updates wait until the upstream release is three days old; promote after testing in dev',
       matchFileNames: ['kubernetes/apps/obscura/prod/**'],
       additionalBranchPrefix: 'obscura-prod-',
       commitMessageSuffix: '(prod)',
