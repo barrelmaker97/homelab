@@ -21,6 +21,16 @@ spec:
 # Layer 0: no dependencies. Everything else renders ServiceMonitors,
 # PodMonitors or PrometheusRules into the monitoring CRDs. Envoy Gateway
 # defines the Gateway API and its own CRDs, which the gateway layer needs.
+# CoreDNS adds a disruption budget for the Talos bootstrap deployment.
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: coredns
+  namespace: flux-system
+spec:
+  path: ./kubernetes/infrastructure/coredns
+  prune: false
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization

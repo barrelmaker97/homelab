@@ -109,6 +109,21 @@ Flux manages itself: upgrade Flux or its operator by editing
   which would point it back at `main`. Preview against the cluster with
   `flux diff kustomization` instead.
 
+## CoreDNS availability
+Talos bootstraps CoreDNS, including its Deployment, image, Corefile, Service
+and RBAC. The `coredns` infrastructure layer manages only a separate
+PodDisruptionBudget; it does not modify Talos's Deployment or scheduling rules.
+
+The PDB requires one ready DNS replica during eviction-based maintenance.
+Use normal PDB-respecting drains rather than manually deleting CoreDNS pods;
+if a drain blocks, recover DNS before proceeding. The PDB does not protect
+against node failure, direct deletion or Deployment rolling updates.
+
+Talos's two DNS replicas prefer separate hostnames, but this is not guaranteed.
+If both land on one node, the PDB protects a normal drain but not an abrupt
+failure of that node. After maintenance or Talos/Kubernetes upgrades, verify
+DNS readiness and placement and that the `coredns` Flux Kustomization is healthy.
+
 ## Adding an app
 1. Create `kubernetes/apps/<app>/` with a `kustomization.yaml` and the app's
    HelmRelease, and `../../components/helmrelease` under `components` in that
