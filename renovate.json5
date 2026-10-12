@@ -44,7 +44,7 @@
       datasourceTemplate: 'docker',
     },
     {
-      description: 'ansible-core pinned inside ansible-lint so lint and runtime match',
+      description: 'ansible-core in the shared playbook and lint environment',
       customType: 'regex',
       managerFilePatterns: ['/^mise\\.toml$/'],
       matchStrings: ['"ansible-core==(?<currentValue>[^"]+)"'],
@@ -53,11 +53,6 @@
     },
   ],
   packageRules: [
-    {
-      description: 'ansible-core: the runtime and the copy pinned for ansible-lint move together',
-      matchDepNames: ['pypi:ansible-core', 'ansible-core'],
-      groupName: 'ansible-core',
-    },
     {
       description: 'Major updates wait on the Dependency Dashboard until approved: they usually need migration work',
       matchUpdateTypes: ['major'],
