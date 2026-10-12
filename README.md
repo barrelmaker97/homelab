@@ -110,28 +110,19 @@ Flux manages itself: upgrade Flux or its operator by editing
   `flux diff kustomization` instead.
 
 ## CoreDNS availability
-Talos bootstraps CoreDNS, including its image, Corefile, Service and RBAC.
-The `coredns` infrastructure layer uses server-side apply to manage only a
-hostname topology-spread constraint on the existing Deployment and a separate
-PodDisruptionBudget. The partial Deployment is not a standalone DNS installer;
-Talos must create it before Flux reconciles this layer.
-
-CoreDNS keeps two replicas. Each rollout revision spreads across at least two
-eligible hostnames with `maxSkew: 1`; `pod-template-hash` lets old and new
-revisions overlap on a node during rolling updates. With one eligible node,
-one replica can run and the second remains Pending. Existing Talos affinity,
-probes, resources and rollout settings are preserved.
+Talos bootstraps CoreDNS, including its Deployment, image, Corefile, Service
+and RBAC. The `coredns` infrastructure layer manages only a separate
+PodDisruptionBudget; it does not modify Talos's Deployment or scheduling rules.
 
 The PDB requires one ready DNS replica during eviction-based maintenance.
 Use normal PDB-respecting drains rather than manually deleting CoreDNS pods;
 if a drain blocks, recover DNS before proceeding. The PDB does not protect
 against node failure, direct deletion or Deployment rolling updates.
 
-Talos normally leaves existing bootstrap objects untouched, and its Kubernetes
-upgrade uses server-side apply. The spread constraint is absent from Talos's
-bootstrap manifest, so it remains Flux-owned; the PDB is also Flux-managed.
-After Talos/Kubernetes upgrades, verify both DNS replicas are ready on separate
-nodes and the `coredns` Flux Kustomization is healthy.
+Talos's two DNS replicas prefer separate hostnames, but this is not guaranteed.
+If both land on one node, the PDB protects a normal drain but not an abrupt
+failure of that node. After maintenance or Talos/Kubernetes upgrades, verify
+DNS readiness and placement and that the `coredns` Flux Kustomization is healthy.
 
 ## Adding an app
 1. Create `kubernetes/apps/<app>/` with a `kustomization.yaml` and the app's

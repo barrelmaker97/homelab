@@ -21,7 +21,7 @@ spec:
 # Layer 0: no dependencies. Everything else renders ServiceMonitors,
 # PodMonitors or PrometheusRules into the monitoring CRDs. Envoy Gateway
 # defines the Gateway API and its own CRDs, which the gateway layer needs.
-# CoreDNS availability customizes the Talos bootstrap deployment without CRDs.
+# CoreDNS adds a disruption budget for the Talos bootstrap deployment.
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
