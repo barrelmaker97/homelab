@@ -1,5 +1,5 @@
 ---
-# Renovate updates this three days after dev; see renovate.json5.
+# Renovate waits for three-day-old releases; promote after testing in dev.
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
