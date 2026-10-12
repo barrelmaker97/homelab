@@ -218,7 +218,9 @@ and shuts everything down for real.
    ansible-playbook setup.yaml
    ```
 2. Boot the nodes from the ISO, then apply the configs and bootstrap etcd.
-   `setup.yaml` writes the configs to `talos_config_dir` (`~/.talos`):
+   `setup.yaml` writes the configs to `talos_config_dir`, which defaults to
+   `.talos` under the Ansible controller's `HOME` on Linux or macOS. Override
+   it with `-e talos_config_dir=/path/to/configs` if needed:
    ```bash
    cd ~/.talos
 
