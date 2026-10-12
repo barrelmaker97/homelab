@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       # Tool versions come from mise.toml, as on a workstation.
-      - uses: jdx/mise-action@v5.1.1
+      - uses: jdx/mise-action@v5.1.2
         with:
           version: 2026.10.8
           install_args: "python uv pypi:ansible-core pypi:ansible-lint"
