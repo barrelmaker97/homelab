@@ -24,7 +24,7 @@ kubeconform = "0.8.0"
 python = "3.14.8"
 uv = "0.13.0"
 "pypi:ansible-core" = { version = "2.21.5", with = ["kubernetes"] }
-"pypi:ansible-lint" = { version = "26.9.0", with = ["ansible-core==2.21.5"] }
+"pypi:ansible-lint" = { version = "26.10.0", with = ["ansible-core==2.21.5"] }
 
 [tasks.collections]
 description = "Install the Ansible collections in ansible/requirements.yml"
