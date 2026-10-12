@@ -9,7 +9,7 @@ argument_specs:
         mise.toml.
     options:
       talos_config_dir:
-        description: Directory the generated machine configs are written to.
+        description: Directory on the Ansible controller the generated machine configs are written to.
         type: path
         required: true
       talos_version:
