@@ -13,6 +13,33 @@ mise install          # the pinned tools
 mise run collections  # the Ansible collections in ansible/requirements.yml
 ```
 
+Ansible commands and ansible-lint share one Python environment, with
+ansible-core pinned once and the Kubernetes Python library installed alongside
+it. Python and uv provide the interpreter and installer for that environment.
+When updating an existing checkout from the separate Ansible installations,
+run `mise install --force pypi:ansible-lint` once to rebuild the environment
+with the exposed Ansible commands.
+
+## Checks
+Local checks and CI run the same mise tasks. No check applies changes to hosts
+or the cluster:
+```bash
+mise run check                # All lint, syntax, schema and rendering checks
+mise run ansible:check        # Ansible lint and playbook syntax checks
+mise run kubernetes:validate  # Kustomize builds and kubeconform schema validation
+mise run kubernetes:render    # Whole-cluster rendering, including Helm charts
+mise run kubernetes:diff      # Rendered diff against main
+```
+Individual Ansible checks are also available as `ansible:lint` and
+`ansible:syntax`. Kubernetes checks fetch charts and schemas over the network
+but do not require a running cluster or secret decryption. Schema validation
+skips Secrets, as in CI.
+
+The diff task accepts flate flags, for example
+`mise run kubernetes:diff --base origin/main --output github`. CI installs only
+the tools needed by each job and disables task auto-installation so a check
+does not pull in the rest of the workstation tools.
+
 # Secrets
 Secrets are sops files encrypted with age (rules in `.sops.yaml`). The personal
 key, expected at `~/.config/sops/age/keys.txt`, decrypts all of them. Files
@@ -86,7 +113,7 @@ Flux manages itself: upgrade Flux or its operator by editing
   charts and post-renderers included
   ([flate](https://github.com/home-operations/flate)), and comments the
   rendered diff on the PR. Preview locally with
-  `flate diff all --path ./kubernetes --base main`.
+  `mise run kubernetes:diff`.
 - Manifests hold literal values, apart from a few kustomize patches and
   generators; the rendered diff shows what will actually be applied. The
   settings every HelmRelease shares are one kustomize component,

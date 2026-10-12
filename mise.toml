@@ -18,17 +18,69 @@ age = "1.3.2"
 kubeconform = "0.8.0"
 "github:home-operations/flate" = "0.6.5"
 
-# Ansible. ansible-core only: the collections the playbooks use are pinned in
-# ansible/requirements.yml. kubernetes.core needs the kubernetes library in
-# ansible's own environment.
+# Ansible commands and lint share one environment. The collections are pinned
+# in ansible/requirements.yml; kubernetes.core needs the kubernetes library.
 python = "3.14.8"
 uv = "0.13.0"
-"pypi:ansible-core" = { version = "2.21.5", with = ["kubernetes"] }
-"pypi:ansible-lint" = { version = "26.10.0", with = ["ansible-core==2.21.5"] }
+
+[tools."pypi:ansible-lint"]
+version = "26.10.0"
+with = ["ansible-core==2.21.5", "kubernetes"]
+expose = ["ansible-core"]
 
 [tasks.collections]
 description = "Install the Ansible collections in ansible/requirements.yml"
 run = "ansible-galaxy collection install -r ansible/requirements.yml"
+
+[tasks.check]
+description = "Run all Ansible and Kubernetes checks used in CI"
+depends = ["ansible:check", "kubernetes:validate", "kubernetes:render"]
+
+[tasks."ansible:check"]
+description = "Lint and syntax-check Ansible"
+depends = ["ansible:lint", "ansible:syntax"]
+
+[tasks."ansible:lint"]
+description = "Lint Ansible and repository YAML"
+depends = ["collections"]
+run = "ansible-lint"
+
+[tasks."ansible:syntax"]
+description = "Syntax-check every Ansible playbook"
+depends = ["collections"]
+dir = "ansible"
+shell = "bash -euo pipefail -c"
+run = '''
+for playbook in *.yaml; do
+  if [ "$playbook" = "inventory.yaml" ]; then continue; fi
+  echo "== $playbook"
+  ansible-playbook --syntax-check "$playbook"
+done
+'''
+
+[tasks."kubernetes:validate"]
+description = "Build every Kubernetes kustomization and validate its schemas"
+shell = "bash -euo pipefail -c"
+run = '''
+find kubernetes -name kustomization.yaml -not -path 'kubernetes/components/*' | sort | while read -r file; do
+  dir=${file%/*}
+  echo "== $dir"
+  kubectl kustomize "$dir" | kubeconform -strict -summary -skip Secret \
+    -schema-location default \
+    -schema-location '{% raw %}https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json{% endraw %}' \
+    -
+done
+'''
+
+[tasks."kubernetes:render"]
+description = "Render and test the whole Flux cluster offline"
+run = "flate test all --path ./kubernetes"
+
+[tasks."kubernetes:diff"]
+description = "Preview rendered cluster changes against main; accepts flate flags"
+quiet = true
+output = "interleave"
+run = "flate diff all --path ./kubernetes --base main"
 
 # The Image Factory returns the same schematic ID for the same customization,
 # so this is the image the nodes run, at talos_version.

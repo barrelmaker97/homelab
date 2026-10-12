@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+  # mise-action installs only this job's tools; tasks must not install the rest.
+  MISE_TASK_RUN_AUTO_INSTALL: "false"
+
 # Flux applies whatever lands on main, so this is the last check before a
 # change reaches the cluster. Every directory holding a kustomization.yaml is
 # built and validated, custom resources against the datreeio CRD catalog.
@@ -18,8 +23,6 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v5.1.2
@@ -27,17 +30,7 @@ jobs:
           version: 2026.10.8
           install_args: "kubectl kubeconform"
       - name: Build and validate
-        # shell: bash adds pipefail, so a failed build cannot hand kubeconform
-        # empty input and pass.
-        shell: bash
-        run: |
-          find kubernetes -name kustomization.yaml -not -path 'kubernetes/components/*' -printf '%h\n' | sort | while read -r dir; do
-            echo "== $dir"
-            kubectl kustomize "$dir" | kubeconform -strict -summary -skip Secret \
-              -schema-location default \
-              -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
-              -
-          done
+        run: mise run kubernetes:validate
 
   # Renders every Kustomization and HelmRelease offline, the way Flux will:
   # charts are fetched and templated, post-renderers run, values are checked
@@ -46,8 +39,6 @@ jobs:
   # flux-local.
   render:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v5.1.2
@@ -55,7 +46,7 @@ jobs:
           version: 2026.10.8
           install_args: "github:home-operations/flate"
       - name: Render and test the whole cluster
-        run: flate test all --path ./kubernetes
+        run: mise run kubernetes:render
 
   # Comments the rendered diff against the base branch on the PR: the
   # objects that will actually change in the cluster, not just the lines that
@@ -67,8 +58,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    env:
-      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -80,7 +69,7 @@ jobs:
       - name: Diff rendered output
         env:
           BASE_REF: ${{ github.base_ref }}
-        run: flate diff all --path ./kubernetes --base "origin/${BASE_REF}" -o github > diff.txt
+        run: mise run kubernetes:diff --base "origin/${BASE_REF}" --output github > diff.txt
       - name: Comment on the pull request
         env:
           GH_TOKEN: ${{ github.token }}
@@ -102,7 +91,7 @@ jobs:
               head -c 60000 diff.txt
               echo
               echo '```'
-              if [ "$(wc -c < diff.txt)" -gt 60000 ]; then echo "_Truncated; run \`flate diff all --path ./kubernetes --base main\` locally for the rest._"; fi
+              if [ "$(wc -c < diff.txt)" -gt 60000 ]; then echo "_Truncated; run \`mise run kubernetes:diff\` locally for the rest._"; fi
             else
               echo "No rendered changes."
             fi

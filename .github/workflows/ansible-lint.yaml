@@ -9,31 +9,20 @@ on:
 permissions:
   contents: read
 
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+  # mise-action installs only this job's tools; tasks must not install the rest.
+  MISE_TASK_RUN_AUTO_INSTALL: "false"
+
 jobs:
   lint:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
       # Tool versions come from mise.toml, as on a workstation.
       - uses: jdx/mise-action@v5.1.2
         with:
           version: 2026.10.8
-          install_args: "python uv pypi:ansible-core pypi:ansible-lint"
-      - name: Install collections
-        run: mise run collections
-      - name: Lint
-        run: ansible-lint
-      - name: Syntax check
-        # Run from ansible/ so its ansible.cfg, inventory and group_vars apply.
-        # inventory.yaml is the only yaml there that is not a playbook. Written
-        # as an if rather than "[ ... ] && continue", which would abort the
-        # whole loop under the default bash -e when the test is false.
-        working-directory: ansible
-        run: |
-          for playbook in *.yaml; do
-            if [ "$playbook" = "inventory.yaml" ]; then continue; fi
-            echo "== $playbook"
-            ansible-playbook --syntax-check "$playbook"
-          done
+          install_args: "python uv pypi:ansible-lint"
+      - name: Lint and syntax check
+        run: mise run ansible:check
