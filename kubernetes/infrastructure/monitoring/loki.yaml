@@ -9,10 +9,10 @@ spec:
   chart:
     spec:
       chart: loki
-      version: "6.55.0"
+      version: "18.15.1"
       sourceRef:
         kind: HelmRepository
-        name: grafana
+        name: grafana-community
         namespace: flux-system
       interval: 1h
   values:
@@ -22,6 +22,9 @@ spec:
       auth_enabled: false
       commonConfig:
         replication_factor: 1
+      # A singleton has no ready memberlist peer to join during a restart.
+      extraMemberlistConfig:
+        abort_if_cluster_join_fails: false
       storage:
         type: filesystem
       schemaConfig:
@@ -39,7 +42,10 @@ spec:
       limits_config:
         retention_period: 720h  # 30 days
         max_query_lookback: 720h  # 30 days
-    deploymentMode: SingleBinary
+    deploymentMode: Monolithic
+    defaults:
+      service:
+        publishNotReadyAddresses: false
     singleBinary:
       replicas: 1
       resources:
@@ -55,7 +61,7 @@ spec:
         size: 10Gi
         whenDeleted: Retain
         whenScaled: Retain
-    # These flags are required to disable the default S3 requirements in 6.x
+    # Keep the other deployment modes disabled for filesystem storage.
     backend:
       replicas: 0
     read:
@@ -67,6 +73,9 @@ spec:
     chunksCache:
       enabled: false
     gateway:
+      # The new chart enables an exporter sidecar; retain the existing footprint.
+      metrics:
+        enabled: false
       resources:
         requests:
           cpu: 5m
