@@ -163,7 +163,7 @@ flux events -A                                    # Why something is not Ready
 - The CloudNativePG databases (`longhorn-cnpg-local`) are not backed up:
   replication protects against losing a node, not against losing data.
 - The Jellyfin media library lives on the NAS itself.
-- Loki stores 30 days of logs on its existing PVC; no object storage is configured.
+- Loki and Tempo retain 30 days of logs and traces on PVCs; no object storage is configured.
 
 # Power
 The nodes, pollux, Soteria and the router run off one UPS (CyberPower
