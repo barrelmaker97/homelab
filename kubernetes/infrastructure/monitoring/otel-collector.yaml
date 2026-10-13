@@ -70,15 +70,15 @@ spec:
         pipelines:
           traces:
             receivers: [otlp]
-            processors: [k8s_attributes, batch]
+            processors: [memory_limiter, k8s_attributes, batch]
             exporters: [otlp_grpc/tempo]
           metrics:
             receivers: [otlp]
-            processors: [k8s_attributes, batch]
+            processors: [memory_limiter, k8s_attributes, batch]
             exporters: [prometheusremotewrite]
           logs:
             receivers: [otlp]
-            processors: [k8s_attributes, batch]
+            processors: [memory_limiter, k8s_attributes, batch]
             exporters: [otlp_http/loki]
     clusterRole:
       create: true

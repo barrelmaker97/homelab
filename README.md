@@ -132,6 +132,11 @@ rolling updates. The two replicas may share a node, so after maintenance or
 upgrades, check DNS readiness and placement and the `coredns` Flux
 Kustomization's health.
 
+## Telemetry
+Apps send OTLP to the OpenTelemetry collector, which routes traces to Tempo,
+logs to Loki, and metrics to Prometheus. Its pipelines apply memory backpressure
+before enrichment and batching. Prometheus also scrapes Tempo's internal metrics.
+
 ## Adding an app
 1. Create `kubernetes/apps/<app>/` with a `kustomization.yaml` and the app's
    HelmRelease, and `../../components/helmrelease` under `components` in that

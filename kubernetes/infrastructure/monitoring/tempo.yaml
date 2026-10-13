@@ -25,6 +25,10 @@ spec:
           memory: 1536Mi
         limits:
           memory: 2Gi
+    serviceMonitor:
+      enabled: true
+    serviceAccount:
+      automountServiceAccountToken: false
     persistence:
       enabled: true
       storageClassName: longhorn-protected
