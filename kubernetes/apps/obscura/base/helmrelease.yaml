@@ -12,6 +12,13 @@ spec:
   valuesFrom:
     - kind: Secret
       name: obscura-values
+    - kind: Secret
+      name: obscura-valkey
+      valuesKey: url
+      targetPath: obscura.pubsub.url
+  # Valkey must be up before the server rolls over to it.
+  dependsOn:
+    - name: valkey
   values:
     replicaCount: 3
 
@@ -68,13 +75,9 @@ spec:
       limits:
         memory: 256Mi
 
+    # Valkey runs as its own release; see valkey-helmrelease.yaml.
     valkey:
-      resources:
-        requests:
-          cpu: 10m
-          memory: 32Mi
-        limits:
-          memory: 128Mi
+      enabled: false
 
     httpRoute:
       enabled: true

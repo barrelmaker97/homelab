@@ -5,6 +5,8 @@ namespace: obscura-dev
 resources:
   - ../base
   - postgres-prometheusrule.yaml
+  - valkey-prometheusrule.yaml
+  - secret-obscura-valkey.sops.yaml
 patches:
   - path: helmrelease.yaml
     target:
