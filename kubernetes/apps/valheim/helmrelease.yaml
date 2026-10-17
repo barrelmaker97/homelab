@@ -19,8 +19,6 @@ spec:
     serverName: Barrelmaker
     worldName: Asgard
     public: false
-    # Holds the server password; decrypted by kustomize-controller from
-    # secret-password.sops.yaml.
     existingSecret: valheim-password
     metrics: true
 
