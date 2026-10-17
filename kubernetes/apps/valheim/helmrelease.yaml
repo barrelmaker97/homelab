@@ -9,19 +9,17 @@ spec:
   chart:
     spec:
       chart: valheim
-      version: "0.7.1"
+      version: "0.8.0"
       sourceRef:
         kind: HelmRepository
         name: barrelmaker
         namespace: flux-system
       interval: 1h
-  valuesFrom:
-    - kind: Secret
-      name: valheim-values
   values:
     serverName: Barrelmaker
     worldName: Asgard
     public: false
+    existingSecret: valheim-password
     metrics: true
 
     persistence:

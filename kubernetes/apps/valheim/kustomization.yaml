@@ -2,19 +2,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - secret-password.sops.yaml
   - helmrelease.yaml
 components:
   - ../../components/helmrelease
-
-# kustomize-controller decrypts values.sops.yaml before building; see
-# kubernetes/apps/loch/kustomization.yaml.
-secretGenerator:
-  - name: valheim-values
-    namespace: barrelmaker
-    files:
-      - values.yaml=values.sops.yaml
-
-generatorOptions:
-  disableNameSuffixHash: true
-  labels:
-    reconcile.fluxcd.io/watch: Enabled
