@@ -15,15 +15,13 @@ spec:
         name: barrelmaker
         namespace: flux-system
       interval: 1h
-  valuesFrom:
-    - kind: Secret
-      name: loch-values
   values:
     server:
       name: L.O.C.H Factory
       description: Lasciate ogne speranza, voi ch'intrate
       maxPlayers: 5
       public: false
+    existingSecret: loch-password
     config:
       resources:
         requests:
