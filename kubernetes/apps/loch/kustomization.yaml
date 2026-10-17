@@ -2,23 +2,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - secret-password.sops.yaml
   - helmrelease.yaml
 components:
   - ../../components/helmrelease
-
-# kustomize-controller decrypts values.sops.yaml before building, so the
-# generated Secret holds plaintext values while the file in Git stays
-# encrypted. The key name sets the output format: values.yaml is what
-# valuesFrom reads by default.
-secretGenerator:
-  - name: loch-values
-    namespace: barrelmaker
-    files:
-      - values.yaml=values.sops.yaml
-
-generatorOptions:
-  # A stable name lets the HelmRelease reference it; the watch label makes
-  # helm-controller upgrade when the Secret changes instead.
-  disableNameSuffixHash: true
-  labels:
-    reconcile.fluxcd.io/watch: Enabled
