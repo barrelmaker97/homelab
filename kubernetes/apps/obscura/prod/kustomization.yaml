@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: obscura
 resources:
   - ../base
+  - secret-rustfs.sops.yaml
   - postgres-prometheusrule.yaml
 patches:
   - path: helmrelease.yaml

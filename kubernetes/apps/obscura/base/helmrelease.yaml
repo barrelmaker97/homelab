@@ -52,8 +52,7 @@ spec:
         name: longhorn-protected
         dataStorageSize: 10Gi
       secret:
-        rustfs:
-          access_key: obscura
+        existingSecret: obscura-rustfs-credentials
       resources:
         requests:
           cpu: 100m
