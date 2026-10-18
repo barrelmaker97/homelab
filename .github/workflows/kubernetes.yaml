@@ -5,6 +5,11 @@ on:
   pull_request:
     branches:
       - main
+  # Tooling updates automerge from their branch without a PR, so CI must run
+  # there for Renovate to see it pass.
+  push:
+    branches:
+      - renovate/tooling-**
 
 permissions:
   contents: read
@@ -52,8 +57,9 @@ jobs:
   # objects that will actually change in the cluster, not just the lines that
   # changed in Git. Updated in place on each push. A PR that renders no
   # changes, such as a tool or CI update, gets no comment: every new comment
-  # is a notification, and an empty one says nothing.
+  # is a notification, and an empty one says nothing. Push runs have no PR.
   diff:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read

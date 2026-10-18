@@ -1,7 +1,8 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
-  // Every update is a PR: CI renders the cluster (flate) and comments the
-  // rendered diff, and merging deploys. Nothing automerges.
+  // Every update that reaches the cluster is a PR: CI renders the cluster
+  // (flate) and comments the rendered diff, and merging deploys. Only tooling
+  // automerges; see the last package rule.
   extends: ['config:recommended'],
   timezone: 'America/Chicago',
   // Flux HelmReleases, HelmRepositories and OCIRepositories.
@@ -103,6 +104,17 @@
       commitMessageSuffix: '(prod)',
       minimumReleaseAge: '3 days',
       prBodyNotes: ['Promote only once this version has run in obscura-dev (devscura.barrelmaker.dev) without problems.'],
+    },
+    {
+      description: 'Tooling never reaches the cluster: it merges without a PR once CI passes on the branch, and a failure opens one. The tools grouped with Talos, Flux and CloudNativePG stay PRs',
+      matchFileNames: ['mise.toml', '.github/workflows/**'],
+      matchDepNames: ['!talosctl', '!flux2', '!aqua:cloudnative-pg/cloudnative-pg/kubectl-cnpg'],
+      matchUpdateTypes: ['minor', 'patch', 'digest'],
+      // The workflows run on push for this prefix, since these branches have no PR.
+      additionalBranchPrefix: 'tooling-',
+      automerge: true,
+      automergeType: 'branch',
+      schedule: ['* * * * 1'],
     },
   ],
 }
