@@ -5,6 +5,7 @@ namespace: obscura
 resources:
   - ../base
   - secret-rustfs.sops.yaml
+  - secret-server.sops.yaml
   - postgres-prometheusrule.yaml
 patches:
   - path: helmrelease.yaml
@@ -15,15 +16,3 @@ patches:
     target:
       kind: Cluster
       name: obscura-postgres
-
-# kustomize-controller decrypts values.sops.yaml before building; see
-# kubernetes/apps/loch/kustomization.yaml.
-secretGenerator:
-  - name: obscura-values
-    files:
-      - values.yaml=values.sops.yaml
-
-generatorOptions:
-  disableNameSuffixHash: true
-  labels:
-    reconcile.fluxcd.io/watch: Enabled

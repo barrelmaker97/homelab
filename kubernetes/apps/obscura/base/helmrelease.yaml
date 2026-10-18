@@ -7,11 +7,6 @@ metadata:
 spec:
   releaseName: obscura
   # Each overlay sets the chart, so dev can run a version before prod.
-  # The sops values only add keys that the values below do not set, so the
-  # merge order (valuesFrom first, then values) does not change the result.
-  valuesFrom:
-    - kind: Secret
-      name: obscura-values
   values:
     replicaCount: 3
 
@@ -36,6 +31,9 @@ spec:
         existingSecret:
           name: obscura-postgres-app
           key: uri
+      auth:
+        existingSecret:
+          name: obscura-server-secrets
       telemetry:
         otlpEndpoint: http://otel.monitoring.svc.cluster.local:4317
         logFormat: json
@@ -43,6 +41,8 @@ spec:
         trustedProxies: 10.244.0.0/16
       fcm:
         projectId: obscura-af88b
+        existingSecret:
+          name: obscura-server-secrets
 
     postgresql:
       enabled: false
