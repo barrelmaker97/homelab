@@ -59,6 +59,15 @@ spec:
     metrics:
       enabled: true
       exporter:
+        # The namespace enforces the restricted Pod Security Standard, and the
+        # chart leaves the exporter's securityContext empty.
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
         resources:
           requests:
             cpu: 5m
