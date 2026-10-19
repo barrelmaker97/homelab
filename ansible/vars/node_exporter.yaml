@@ -1,0 +1,3 @@
+---
+# Read by node_exporter.yaml.
+node_exporter_version: "1.12.1"

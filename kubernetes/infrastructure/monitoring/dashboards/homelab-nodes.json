@@ -547,7 +547,7 @@
           },
           "editorMode": "builder",
           "exemplar": true,
-          "expr": "node_hwmon_temp_celsius{sensor=\"temp1\", chip!=\"ieee80211_phy1\", chip!=\"ieee80211_phy0\", job=\"nodes\"}",
+          "expr": "node_hwmon_temp_celsius{sensor=\"temp1\", chip=~\"thermal_thermal_zone0|platform_coretemp_0\", job=\"nodes\"}",
           "hide": false,
           "interval": "",
           "intervalFactor": 1,

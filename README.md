@@ -68,22 +68,24 @@ ansible-playbook user.yaml
 ansible-playbook dns.yaml --tags pihole
 ```
 
-| Playbook        | Targets       | Purpose                                                    |
-|-----------------|---------------|------------------------------------------------------------|
-| `setup.yaml`    | localhost     | Generate Talos machine configs for the control plane nodes |
-| `user.yaml`     | localhost     | Create the cluster user, sign its cert, write a kubeconfig |
-| `flux.yaml`     | localhost     | Bootstrap Flux on a cluster that has none                  |
-| `dns.yaml`      | `dns_servers` | unbound, Pi-hole and keepalived on the DNS pair            |
-| `dewpoint.yaml` | `dns_servers` | The dewpoint Govee sensor Prometheus exporter              |
-| `nut.yaml`      | `ups_servers` | The NUT server, on the host the UPS is USB-connected to    |
+| Playbook             | Targets       | Purpose                                                    |
+|----------------------|---------------|------------------------------------------------------------|
+| `setup.yaml`         | localhost     | Generate Talos machine configs for the control plane nodes |
+| `user.yaml`          | localhost     | Create the cluster user, sign its cert, write a kubeconfig |
+| `flux.yaml`          | localhost     | Bootstrap Flux on a cluster that has none                  |
+| `dns.yaml`           | `dns_servers` | unbound, Pi-hole and keepalived on the DNS pair            |
+| `dewpoint.yaml`      | `dns_servers` | The dewpoint Govee sensor Prometheus exporter              |
+| `node_exporter.yaml` | `dns_servers` | The Prometheus node exporter, from the official release    |
+| `nut.yaml`           | `ups_servers` | The NUT server, on the host the UPS is USB-connected to    |
 
 None of them is meant to run on a schedule. `setup.yaml` mints a fresh Talos
 admin certificate and `user.yaml` a fresh client certificate on every run, so
 run them when building the cluster or renewing the kubeconfig. `flux.yaml` only
 acts on a cluster missing Flux, or one that lost it. `dns.yaml`,
-`dewpoint.yaml` and `nut.yaml` support role tags. Run `dns.yaml` one host at a time
-(`--limit castor`, then `--limit pollux`): a config change restarts unbound,
-and the VIP needs one healthy resolver to stay on.
+`dewpoint.yaml`, `node_exporter.yaml` and `nut.yaml` support role tags. Run
+`dns.yaml` one host at a time (`--limit castor`, then `--limit pollux`): a
+config change restarts unbound, and the VIP needs one healthy resolver to stay
+on.
 
 # Flux
 The FluxInstance syncs `kubernetes/clusters/poseidon` from `main` every minute.

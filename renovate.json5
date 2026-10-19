@@ -38,6 +38,15 @@
       extractVersionTemplate: '^v(?<version>.+)$',
     },
     {
+      description: 'node exporter release installed on the DNS hosts',
+      customType: 'regex',
+      managerFilePatterns: ['/^ansible/vars/node_exporter\\.yaml$/'],
+      matchStrings: ['node_exporter_version: "(?<currentValue>[^"]+)"'],
+      depNameTemplate: 'prometheus/node_exporter',
+      datasourceTemplate: 'github-releases',
+      extractVersionTemplate: '^v(?<version>.+)$',
+    },
+    {
       description: 'PostgreSQL image of CloudNativePG Clusters, tag and digest',
       customType: 'regex',
       managerFilePatterns: ['/^kubernetes/.+\\.ya?ml$/'],

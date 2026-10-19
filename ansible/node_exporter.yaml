@@ -1,0 +1,10 @@
+---
+- name: Deploy node exporter
+  hosts: dns_servers
+  become: true
+  gather_facts: false
+  vars_files:
+    - vars/node_exporter.yaml
+  roles:
+    - role: node_exporter
+      tags: [node_exporter]
