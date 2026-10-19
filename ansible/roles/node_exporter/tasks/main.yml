@@ -1,0 +1,71 @@
+---
+- name: Create node_exporter system user
+  ansible.builtin.user:
+    name: node_exporter
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Check installed node exporter version
+  ansible.builtin.command: /usr/local/bin/node_exporter --version
+  register: node_exporter_installed
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+# The official build, verified against the release's sha256sums.txt. Compiling
+# on the Pi exhausts its memory.
+- name: Install node exporter release
+  when: >-
+    (node_exporter_installed.stdout ~ node_exporter_installed.stderr)
+    is not search('version ' ~ node_exporter_version ~ ' ')
+  vars:
+    node_exporter_release: "node_exporter-{{ node_exporter_version }}.linux-arm64"
+    node_exporter_url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}"
+  block:
+    - name: Download node exporter release
+      ansible.builtin.get_url:
+        url: "{{ node_exporter_url }}/{{ node_exporter_release }}.tar.gz"
+        dest: "/tmp/{{ node_exporter_release }}.tar.gz"
+        checksum: "sha256:{{ node_exporter_url }}/sha256sums.txt"
+        owner: root
+        group: root
+        mode: '0644'
+
+    # Check mode downloads nothing, so there is nothing to unpack or install
+    - name: Unpack and install node exporter binary
+      when: not ansible_check_mode
+      block:
+        - name: Unpack node exporter release
+          ansible.builtin.unarchive:
+            src: "/tmp/{{ node_exporter_release }}.tar.gz"
+            dest: /tmp
+            remote_src: true
+
+        - name: Install node exporter binary
+          ansible.builtin.copy:
+            src: "/tmp/{{ node_exporter_release }}/node_exporter"
+            dest: /usr/local/bin/node_exporter
+            remote_src: true
+            owner: root
+            group: root
+            mode: '0755'
+          notify: Restart node exporter
+
+- name: Install node exporter systemd unit
+  ansible.builtin.template:
+    src: node-exporter.service.j2
+    dest: /etc/systemd/system/node-exporter.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart node exporter
+
+- name: Flush handlers to restart node exporter before continuing
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure node exporter is enabled and started
+  ansible.builtin.systemd:
+    name: node-exporter
+    enabled: true
+    state: started

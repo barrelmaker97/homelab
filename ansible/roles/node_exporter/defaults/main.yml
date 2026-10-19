@@ -1,0 +1,3 @@
+---
+# Port on which node exporter serves metrics.
+node_exporter_bind_port: 9100
