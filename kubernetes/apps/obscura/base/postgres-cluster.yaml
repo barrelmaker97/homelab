@@ -10,6 +10,7 @@ metadata:
 spec:
   description: "Production PostgreSQL cluster for Obscura"
   instances: 3
+  primaryUpdateMethod: switchover
   enablePDB: true
   enableSuperuserAccess: false
   bootstrap:
