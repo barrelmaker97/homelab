@@ -1,0 +1,44 @@
+---
+- name: Install NUT client
+  ansible.builtin.apt:
+    name: nut-client
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+# Purged rather than removed, so no stale upsd.users with every account's
+# password is left behind on a host that used to be the server
+- name: Purge NUT server
+  ansible.builtin.apt:
+    name: nut-server
+    state: absent
+    purge: true
+
+- name: Configure NUT mode
+  ansible.builtin.template:
+    src: nut.conf.j2
+    dest: /etc/nut/nut.conf
+    owner: root
+    group: nut
+    mode: '0640'
+  notify: Restart nut-monitor
+
+# Holds the account's password, so no diff
+- name: Configure upsmon
+  ansible.builtin.template:
+    src: upsmon.conf.j2
+    dest: /etc/nut/upsmon.conf
+    owner: root
+    group: nut
+    mode: '0640'
+  diff: false
+  notify: Restart nut-monitor
+
+- name: Flush handlers to restart upsmon before checking it
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure nut-monitor is enabled and started
+  ansible.builtin.systemd:
+    name: nut-monitor
+    enabled: true
+    state: started

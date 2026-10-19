@@ -18,7 +18,7 @@ spec:
   values:
     pistachio:
       ups:
-        host: pollux.lan
+        host: castor.lan
 
     replicaCount: 2 # For faster failover
 

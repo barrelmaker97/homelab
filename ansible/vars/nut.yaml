@@ -1,8 +1,10 @@
 ---
-# Read by nut.yaml. The server address, UPS name and the Talos nodes' account
-# are shared with setup.yaml, so they live in group_vars/all.yaml. Passwords
-# are kept in nut.sops.yaml beside this file.
+# Read by both plays in nut.yaml. The server address, UPS name and the Talos
+# nodes' account are shared with setup.yaml, so they live in
+# group_vars/all.yaml. Passwords are kept in nut.sops.yaml beside this file.
 nut_secrets: "{{ lookup('community.sops.sops', playbook_dir ~ '/vars/nut.sops.yaml') | from_yaml }}"
 nut_admin_password: "{{ nut_secrets.admin_password }}"
 nut_localuser_password: "{{ nut_secrets.localuser_password }}"
 nut_monuser_password: "{{ nut_secrets.monuser_password }}"
+nut_client_user: polluxuser
+nut_client_password: "{{ nut_secrets.polluxuser_password }}"

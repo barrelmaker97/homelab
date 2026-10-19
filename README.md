@@ -68,23 +68,23 @@ ansible-playbook user.yaml
 ansible-playbook dns.yaml --tags pihole
 ```
 
-| Playbook             | Targets       | Purpose                                                    |
-|----------------------|---------------|------------------------------------------------------------|
-| `setup.yaml`         | localhost     | Generate Talos machine configs for the control plane nodes |
-| `user.yaml`          | localhost     | Create the cluster user, sign its cert, write a kubeconfig |
-| `flux.yaml`          | localhost     | Bootstrap Flux on a cluster that has none                  |
-| `dns.yaml`           | `dns_servers` | unbound, Pi-hole and keepalived on the DNS pair            |
-| `dewpoint.yaml`      | `dns_servers` | The dewpoint Govee sensor Prometheus exporter              |
-| `node_exporter.yaml` | `dns_servers` | The Prometheus node exporter, from the official release    |
-| `nut.yaml`           | `ups_servers` | The NUT server, on the host the UPS is USB-connected to    |
-| `wireguard.yaml`     | `vpn_servers` | The WireGuard VPN server                                   |
+| Playbook             | Targets                      | Purpose                                                                            |
+|----------------------|------------------------------|------------------------------------------------------------------------------------|
+| `setup.yaml`         | localhost                    | Generate Talos machine configs for the control plane nodes                         |
+| `user.yaml`          | localhost                    | Create the cluster user, sign its cert, write a kubeconfig                         |
+| `flux.yaml`          | localhost                    | Bootstrap Flux on a cluster that has none                                          |
+| `dns.yaml`           | `dns_servers`                | unbound, Pi-hole and keepalived on the DNS pair                                    |
+| `dewpoint.yaml`      | `dns_servers`                | The dewpoint Govee sensor Prometheus exporter                                      |
+| `node_exporter.yaml` | `dns_servers`                | The Prometheus node exporter, from the official release                            |
+| `nut.yaml`           | `ups_servers`, `ups_clients` | The NUT server, on the host the UPS is USB-connected to, and its Linux secondaries |
+| `wireguard.yaml`     | `vpn_servers`                | The WireGuard VPN server                                                           |
 
 None of them is meant to run on a schedule. `setup.yaml` mints a fresh Talos
 admin certificate and `user.yaml` a fresh client certificate on every run, so
 run them when building the cluster or renewing the kubeconfig. `flux.yaml` only
 acts on a cluster missing Flux, or one that lost it. `dns.yaml`,
 `dewpoint.yaml`, `node_exporter.yaml`, `nut.yaml` and `wireguard.yaml` support
-role tags. Run
+role tags (`nut.yaml` has `nut` and `nut_client`). Run
 `dns.yaml` one host at a time (`--limit castor`, then `--limit pollux`): a
 config change restarts unbound, and the VIP needs one healthy resolver to stay
 on.
@@ -175,30 +175,31 @@ flux events -A                                    # Why something is not Ready
 - Loki and Tempo retain 30 days of logs and traces on PVCs; no object storage is configured.
 
 # Power
-The nodes, pollux, Soteria and the router run off one UPS (CyberPower
-CP1500PFCLCDa), USB-connected to pollux; the modem does not. Pollux is the NUT primary, configured by `nut.yaml`; the Talos nodes are
-secondaries through the nut-client extension, configured by `setup.yaml`, and
-Soteria is one through DSM.
+The nodes, castor, pollux, Soteria and the router run off one UPS (CyberPower
+CP1500PFCLCDa), USB-connected to castor; the modem does not. Castor is the NUT
+primary, configured by `nut.yaml`. The secondaries are the Talos nodes, through
+the nut-client extension configured by `setup.yaml`; pollux, through the
+`nut_client` role in `nut.yaml`; and Soteria, through DSM.
 
 On battery, a power loss plays out as:
 1. The driver raises low battery at 600s of runtime or 15% charge, whichever
    comes first, rather than trusting the UPS's own flag.
-2. Pollux sets FSD and every secondary starts shutting down.
-3. Pollux waits up to 15s for them, shuts itself down and commands killpower.
+2. Castor sets FSD and every secondary starts shutting down.
+3. Castor waits up to 15s for them, shuts itself down and commands killpower.
 4. The UPS holds its output for 180s, then cuts it.
 5. Once mains returns, it waits 240s and restores output.
 
 A graceful Talos shutdown takes about 70s, so the nodes get roughly 2.5x what
 they need. If one ever comes close to 3 minutes, raise `nut_ups_offdelay` and
-`nut_ups_runtime_low` together. Pollux boots when power returns; the nodes stay
-off and have to be powered on.
+`nut_ups_runtime_low` together. Castor and pollux boot when power returns; the
+nodes stay off and have to be powered on.
 
 DSM cannot set the UPS name or credentials: it always connects to `ups` as
-`monuser`, which is why the server keeps both. Point it at pollux under
+`monuser`, which is why the server keeps both. Point it at castor under
 **Control Panel > Hardware and Power > UPS** as a Synology UPS server.
 
-Check the server and its clients with `upsc ups@pollux.lan` and
-`upsc -c ups@pollux.lan`. `sudo upsmon -c fsd` on pollux tests the whole chain
+Check the server and its clients with `upsc ups@castor.lan` and
+`upsc -c ups@castor.lan`. `sudo upsmon -c fsd` on castor tests the whole chain
 and shuts everything down for real.
 
 # VPN

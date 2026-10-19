@@ -23,6 +23,14 @@ argument_specs:
         description: Password for nut_user.
         type: str
         required: true
+      nut_client_user:
+        description: upsd account the nut_client role's hosts monitor the UPS with.
+        type: str
+        required: true
+      nut_client_password:
+        description: Password for nut_client_user.
+        type: str
+        required: true
       nut_admin_password:
         description: Password for the admin upsd account.
         type: str

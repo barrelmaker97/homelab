@@ -17,9 +17,9 @@ node_names:
 
 cluster_domain: "{{ cluster_host }}.{{ local_domain }}"
 
-# NUT: the UPS pollux serves, and the account the Talos nodes monitor it with.
+# NUT: the UPS castor serves, and the account the Talos nodes monitor it with.
 # nut.yaml configures the server side, setup.yaml the nut-client extension.
-nut_server: 192.168.15.30
+nut_server: 192.168.15.70
 nut_ups_name: ups
 nut_host: "{{ nut_ups_name }}@{{ nut_server }}"
 nut_user: remoteuser

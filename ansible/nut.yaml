@@ -8,3 +8,13 @@
   roles:
     - role: nut
       tags: [nut]
+
+- name: Deploy NUT clients
+  hosts: ups_clients
+  become: true
+  gather_facts: false
+  vars_files:
+    - vars/nut.yaml
+  roles:
+    - role: nut_client
+      tags: [nut_client]
