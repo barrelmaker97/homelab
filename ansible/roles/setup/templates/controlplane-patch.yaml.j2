@@ -89,6 +89,12 @@ kind: KubeProxyConfig
 config:
   metricsBindAddress: 0.0.0.0:10249
 ---
+# Flannel does not enforce NetworkPolicy; this runs kube-network-policies
+# beside it so the policies Flux and Longhorn ship are applied.
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+kubeNetworkPoliciesEnabled: true
+---
 # Longhorn's disk. Talos mounts it at /var/mnt/longhorn and propagates it into
 # the kubelet, so it needs no kubelet mount.
 apiVersion: v1alpha1
