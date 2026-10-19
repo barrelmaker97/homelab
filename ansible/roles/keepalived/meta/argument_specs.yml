@@ -3,8 +3,9 @@ argument_specs:
   main:
     short_description: Configure keepalived VRRP failover
     description:
-      - Installs keepalived, deploys the Pi-hole health check script and writes
-        a VRRP configuration that floats a virtual IP between the DNS servers.
+      - Installs keepalived and writes a VRRP configuration that floats a
+        virtual IP between the DNS servers, tracking the health checks in
+        keepalived_track_scripts.
       - Per-host values come from inventory.yaml.
     options:
       keepalived_state:
@@ -15,9 +16,9 @@ argument_specs:
         choices: [MASTER, BACKUP]
       keepalived_priority:
         description:
-          - VRRP priority. Higher wins the election. The health check subtracts
-            60 on failure, so the gap between hosts must exceed that for
-            failover to actually take place.
+          - VRRP priority. Higher wins the election. Each failing track script
+            subtracts 60, so the gap between hosts must be less than that for
+            one failure to move the VIP.
         type: int
         required: true
       keepalived_vip:
@@ -28,6 +29,24 @@ argument_specs:
         description: Interface the virtual IP is advertised on.
         type: str
         required: true
+      keepalived_track_scripts:
+        description:
+          - Health checks for the services behind the VIP. Each one failing
+            subtracts 60 from the priority. The role of the service each
+            checks installs the script; this role fails if one is missing,
+            rather than letting keepalived skip it.
+        type: list
+        elements: dict
+        required: true
+        options:
+          name:
+            description: vrrp_script name.
+            type: str
+            required: true
+          path:
+            description: Executable that exits 0 when the service is healthy.
+            type: str
+            required: true
       keepalived_router_id:
         description:
           - VRRP virtual router ID. Must match across the hosts in this group

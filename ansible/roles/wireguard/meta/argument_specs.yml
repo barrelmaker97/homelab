@@ -8,6 +8,7 @@ argument_specs:
         and the internet.
       - Peer changes are applied with a reload, which keeps connected clients
         up.
+      - Installs check_wireguard.sh, the health check keepalived tracks.
     options:
       wireguard_private_key:
         description: The server's private key.

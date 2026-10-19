@@ -6,6 +6,8 @@ argument_specs:
       - Installs Pi-hole unattended when absent, applies configuration through
         pihole-FTL, then reconciles groups, clients, adlists and domain rules
         against the Pi-hole API. Unmanaged entries are removed.
+      - Installs check_pihole.sh, the health check keepalived tracks, which
+        verifies both Pi-hole and unbound answer.
       - Defaults for every option below are supplied by defaults/main.yml.
     options:
       pihole_config:

@@ -37,6 +37,15 @@
   diff: false
   notify: Reload WireGuard
 
+# Read by keepalived, which gives up the VIP when it fails
+- name: Install WireGuard health check
+  ansible.builtin.copy:
+    src: check_wireguard.sh
+    dest: /usr/local/bin/check_wireguard.sh
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Flush handlers to apply configuration before continuing
   ansible.builtin.meta: flush_handlers
 

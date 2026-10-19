@@ -44,6 +44,22 @@
     mode: "0775"
     state: directory
 
+- name: Install dig for the health check
+  ansible.builtin.apt:
+    name: dnsutils
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+# Read by keepalived, which gives up the VIP when it fails
+- name: Install Pi-hole health check
+  ansible.builtin.copy:
+    src: check_pihole.sh
+    dest: /usr/local/bin/check_pihole.sh
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Read current pihole config values
   ansible.builtin.command: "pihole-FTL --config {{ item.key }}"
   loop: "{{ pihole_config | dict2items }}"

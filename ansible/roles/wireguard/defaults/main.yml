@@ -4,7 +4,7 @@
 wireguard_address: 10.33.167.1/24
 wireguard_subnet: 10.33.167.0/24
 
-# UDP port the server listens on, forwarded to it by the router.
+# UDP port the server listens on, which the router forwards to the DNS VIP.
 wireguard_port: 51820
 wireguard_mtu: 1420
 

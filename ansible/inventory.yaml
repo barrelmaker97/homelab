@@ -14,9 +14,16 @@ all:
         keepalived_vip: 192.168.15.80
         keepalived_interface: eth0
         keepalived_router_id: 51
+        # Installed by the pihole and wireguard roles
+        keepalived_track_scripts:
+          - name: chk_pihole
+            path: /usr/local/bin/check_pihole.sh
+          - name: chk_wireguard
+            path: /usr/local/bin/check_wireguard.sh
     ups_servers:
       hosts:
         pollux:
     vpn_servers:
       hosts:
+        castor:
         pollux:
