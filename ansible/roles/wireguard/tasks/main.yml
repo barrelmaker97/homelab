@@ -1,0 +1,47 @@
+---
+- name: Install WireGuard
+  ansible.builtin.apt:
+    name:
+      - wireguard-tools
+      - iptables
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Enable IP forwarding
+  ansible.builtin.template:
+    src: sysctl.conf.j2
+    dest: /etc/sysctl.d/99-wireguard.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Apply WireGuard sysctl
+
+- name: Record wg0 settings that need a restart
+  ansible.builtin.template:
+    src: wg0.restart.j2
+    dest: /etc/wireguard/wg0.restart
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart WireGuard
+
+# Holds the private and preshared keys, so no diff
+- name: Configure wg0
+  ansible.builtin.template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    owner: root
+    group: root
+    mode: '0600'
+  diff: false
+  notify: Reload WireGuard
+
+- name: Flush handlers to apply configuration before continuing
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure wg0 is enabled and started
+  ansible.builtin.systemd:
+    name: wg-quick@wg0
+    enabled: true
+    state: started

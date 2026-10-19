@@ -1,0 +1,10 @@
+---
+- name: Deploy WireGuard VPN server
+  hosts: vpn_servers
+  become: true
+  gather_facts: false
+  vars_files:
+    - vars/wireguard.yaml
+  roles:
+    - role: wireguard
+      tags: [wireguard]

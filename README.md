@@ -77,12 +77,14 @@ ansible-playbook dns.yaml --tags pihole
 | `dewpoint.yaml`      | `dns_servers` | The dewpoint Govee sensor Prometheus exporter              |
 | `node_exporter.yaml` | `dns_servers` | The Prometheus node exporter, from the official release    |
 | `nut.yaml`           | `ups_servers` | The NUT server, on the host the UPS is USB-connected to    |
+| `wireguard.yaml`     | `vpn_servers` | The WireGuard VPN server                                   |
 
 None of them is meant to run on a schedule. `setup.yaml` mints a fresh Talos
 admin certificate and `user.yaml` a fresh client certificate on every run, so
 run them when building the cluster or renewing the kubeconfig. `flux.yaml` only
 acts on a cluster missing Flux, or one that lost it. `dns.yaml`,
-`dewpoint.yaml`, `node_exporter.yaml` and `nut.yaml` support role tags. Run
+`dewpoint.yaml`, `node_exporter.yaml`, `nut.yaml` and `wireguard.yaml` support
+role tags. Run
 `dns.yaml` one host at a time (`--limit castor`, then `--limit pollux`): a
 config change restarts unbound, and the VIP needs one healthy resolver to stay
 on.
@@ -199,6 +201,29 @@ Check the server and its clients with `upsc ups@pollux.lan` and
 `upsc -c ups@pollux.lan`. `sudo upsmon -c fsd` on pollux tests the whole chain
 and shuts everything down for real.
 
+# VPN
+Pollux is a WireGuard server on UDP 51820, which the router forwards to it,
+configured by `wireguard.yaml`. Clients get an address in `10.33.167.0/24`,
+send all their traffic through the tunnel, and use pollux (`10.33.167.1`) for
+DNS. Pollux masquerades their traffic out of `eth0`.
+
+The server's and peers' keys are in `ansible/vars/wireguard.sops.yaml`; the
+peer list and addresses are in `ansible/vars/wireguard.yaml`. Peer changes
+reload WireGuard without dropping connected clients. To add a client:
+1. On the workstation, generate its keys: `wg genkey | tee client.key | wg pubkey`
+   and `wg genpsk`.
+2. Add its public and preshared keys under its name in `wireguard.sops.yaml`
+   (`sops ansible/vars/wireguard.sops.yaml`), and the name with the next free
+   `/32` to `wireguard_peers`.
+3. Run `ansible-playbook wireguard.yaml`.
+4. Give the client a config with its private key, `Address = <its IP>/24`,
+   `DNS = 10.33.167.1`, and a `[Peer]` with the server's public key
+   (`sudo wg show wg0 public-key` on pollux), the preshared key,
+   `Endpoint = <public hostname>:51820` and `AllowedIPs = 0.0.0.0/0, ::/0`.
+   Show it as a QR code for a phone with `qrencode -t ansiutf8 < client.conf`.
+
+To remove a client, delete it from both files and run the playbook.
+
 # IP Plan
 ### Cluster
 | Name         | Address                     | Hostname           |
@@ -226,6 +251,14 @@ and shuts everything down for real.
 | Router  | 192.168.15.1  | openwrt.lan | Router and NTP server                        |
 | Soteria | 192.168.15.20 | soteria.lan | NAS: Longhorn backups, Jellyfin media        |
 | Demeter | 192.168.15.50 | demeter.lan | Workstation                                  |
+
+### VPN
+| Name    | Address        |
+|---------|----------------|
+| Pollux  | 10.33.167.1    |
+| fonso   | 10.33.167.2    |
+| macbook | 10.33.167.6    |
+| s26     | 10.33.167.7    |
 
 # Cluster Bootstrap
 1. Generate the Talos machine configs and the ISO link:

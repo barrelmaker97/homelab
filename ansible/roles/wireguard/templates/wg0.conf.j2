@@ -1,0 +1,15 @@
+[Interface]
+Address = {{ wireguard_address }}
+ListenPort = {{ wireguard_port }}
+MTU = {{ wireguard_mtu }}
+PrivateKey = {{ wireguard_private_key }}
+PostUp = iptables -t nat -A POSTROUTING -s {{ wireguard_subnet }} -o {{ wireguard_nat_interface }} -m comment --comment wireguard-nat-rule -j MASQUERADE
+PostDown = iptables -t nat -D POSTROUTING -s {{ wireguard_subnet }} -o {{ wireguard_nat_interface }} -m comment --comment wireguard-nat-rule -j MASQUERADE
+{% for peer in wireguard_peers %}
+
+# {{ peer.name }}
+[Peer]
+PublicKey = {{ wireguard_peer_keys[peer.name].public_key }}
+PresharedKey = {{ wireguard_peer_keys[peer.name].preshared_key }}
+AllowedIPs = {{ peer.allowed_ips }}
+{% endfor %}

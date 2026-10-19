@@ -17,3 +17,6 @@ all:
     ups_servers:
       hosts:
         pollux:
+    vpn_servers:
+      hosts:
+        pollux:

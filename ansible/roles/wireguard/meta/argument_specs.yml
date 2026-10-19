@@ -1,0 +1,55 @@
+---
+argument_specs:
+  main:
+    short_description: Configure a WireGuard VPN server
+    description:
+      - Writes wg0.conf for wg-quick, enables IP forwarding, and masquerades
+        VPN traffic out of wireguard_nat_interface so clients reach the LAN
+        and the internet.
+      - Peer changes are applied with a reload, which keeps connected clients
+        up.
+    options:
+      wireguard_private_key:
+        description: The server's private key.
+        type: str
+        required: true
+      wireguard_peers:
+        description: Peers allowed to connect, each with its VPN address.
+        type: list
+        elements: dict
+        required: true
+        options:
+          name:
+            description: Peer name, the key into wireguard_peer_keys.
+            type: str
+            required: true
+          allowed_ips:
+            description: The peer's address on the VPN, as a /32.
+            type: str
+            required: true
+      wireguard_peer_keys:
+        description:
+          - Each peer's public_key and preshared_key, keyed by peer name.
+        type: dict
+        required: true
+      wireguard_address:
+        description:
+          - The server's address on the VPN, with prefix. Defaults to
+            10.33.167.1/24 via defaults/main.yml.
+        type: str
+      wireguard_subnet:
+        description:
+          - The VPN subnet masqueraded out of wireguard_nat_interface.
+            Defaults to 10.33.167.0/24 via defaults/main.yml.
+        type: str
+      wireguard_port:
+        description: UDP port to listen on. Defaults to 51820 via defaults/main.yml.
+        type: int
+      wireguard_mtu:
+        description: Interface MTU. Defaults to 1420 via defaults/main.yml.
+        type: int
+      wireguard_nat_interface:
+        description:
+          - Interface VPN traffic leaves through. Defaults to eth0 via
+            defaults/main.yml.
+        type: str
