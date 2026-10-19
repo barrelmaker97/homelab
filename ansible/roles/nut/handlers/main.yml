@@ -1,4 +1,11 @@
 ---
+# The package's udev rule only reaches a UPS plugged in after it was installed;
+# one already attached stays root-owned and the driver cannot open it. Defined
+# first so it runs before the driver restarts.
+- name: Apply NUT udev rule
+  ansible.builtin.shell: udevadm trigger --subsystem-match=usb --action=add && udevadm settle
+  changed_when: true
+
 - name: Restart nut-driver
   ansible.builtin.systemd:
     name: "nut-driver@{{ nut_ups_name }}"
