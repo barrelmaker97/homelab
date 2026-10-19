@@ -2,7 +2,7 @@
 GitOps and Ansible for the poseidon homelab cluster and the hosts around it.
 Flux deploys everything on the cluster from `kubernetes/`. Ansible, in
 `ansible/`, does what Flux cannot: builds and bootstraps the cluster, issues
-the local kubeconfig, and manages the DNS and sensor hosts.
+the local kubeconfig, and manages castor and pollux: DNS, VPN, UPS and sensors.
 
 # Tools
 Every tool is pinned in `mise.toml`, and CI installs from the same file.
@@ -68,40 +68,38 @@ ansible-playbook user.yaml
 ansible-playbook dns.yaml --tags pihole
 ```
 
-| Playbook             | Targets                      | Purpose                                                                            |
-|----------------------|------------------------------|------------------------------------------------------------------------------------|
-| `setup.yaml`         | localhost                    | Generate Talos machine configs for the control plane nodes                         |
-| `user.yaml`          | localhost                    | Create the cluster user, sign its cert, write a kubeconfig                         |
-| `flux.yaml`          | localhost                    | Bootstrap Flux on a cluster that has none                                          |
-| `dns.yaml`           | `dns_servers`                | unbound, Pi-hole and keepalived on the DNS pair                                    |
-| `dewpoint.yaml`      | `dns_servers`                | The dewpoint Govee sensor Prometheus exporter                                      |
-| `node_exporter.yaml` | `dns_servers`                | The Prometheus node exporter, from the official release                            |
-| `nut.yaml`           | `ups_servers`, `ups_clients` | The NUT server, on the host the UPS is USB-connected to, and its Linux secondaries |
-| `wireguard.yaml`     | `vpn_servers`                | The WireGuard VPN server                                                           |
+| Playbook             | Targets                      | Purpose                                                    |
+|----------------------|------------------------------|------------------------------------------------------------|
+| `setup.yaml`         | localhost                    | Generate Talos machine configs for the control plane nodes |
+| `user.yaml`          | localhost                    | Create the cluster user, sign its cert, write a kubeconfig |
+| `flux.yaml`          | localhost                    | Bootstrap Flux on a cluster that has none                  |
+| `dns.yaml`           | `dns_servers`                | Install unbound, Pi-hole and keepalived                    |
+| `dewpoint.yaml`      | `dns_servers`                | Install the dewpoint Govee sensor exporter                 |
+| `node_exporter.yaml` | `dns_servers`                | Install the Prometheus node exporter                       |
+| `nut.yaml`           | `ups_servers`, `ups_clients` | Run the NUT server on the UPS host, and its secondaries    |
+| `wireguard.yaml`     | `vpn_servers`                | Run the WireGuard VPN server                               |
 
-None of them is meant to run on a schedule. `setup.yaml` mints a fresh Talos
-admin certificate and `user.yaml` a fresh client certificate on every run, so
-run them when building the cluster or renewing the kubeconfig. `flux.yaml` only
-acts on a cluster missing Flux, or one that lost it. `dns.yaml`,
-`dewpoint.yaml`, `node_exporter.yaml`, `nut.yaml` and `wireguard.yaml` support
-role tags (`nut.yaml` has `nut` and `nut_client`). Run
-`dns.yaml` one host at a time (`--limit castor`, then `--limit pollux`): a
-config change restarts unbound, and the VIP needs one healthy resolver to stay
-on.
+None of them is meant to run on a schedule. Every run of `setup.yaml` mints a
+fresh Talos admin certificate and adds another context to `~/.talos/config`,
+and every run of `user.yaml` a fresh client certificate, so run them when
+building the cluster or renewing the kubeconfig. `flux.yaml` only acts on a
+cluster missing Flux, or one that lost it. Each host playbook tags its roles by
+name, as in `--tags pihole`.
 
-# Flux
+# Cluster
+## Flux
 The FluxInstance syncs `kubernetes/clusters/poseidon` from `main` every minute.
 Flux manages itself: upgrade Flux or its operator by editing
 `flux-system/flux-instance.yaml` or `flux-system/flux-operator.yaml` there.
 
-| Path                                | Contents                                                  |
-|-------------------------------------|-----------------------------------------------------------|
+| Path                                | Contents                                                                                    |
+|-------------------------------------|---------------------------------------------------------------------------------------------|
 | `kubernetes/clusters/poseidon`      | Flux itself (`flux-system/`), chart sources, and the infrastructure/app Flux Kustomizations |
-| `kubernetes/infrastructure/<layer>` | Platform layers, ordered bottom up by `dependsOn` in `infrastructure.yaml` |
-| `kubernetes/apps/<app>`             | The app's HelmRelease, plus its namespace, database and alerts where it owns them |
-| `kubernetes/apps/barrelmaker`       | The namespace most apps share, with its quota and limit range |
-| `kubernetes/apps/obscura`           | Obscura's shared `base` and `prod`/`dev` overlays |
-| `kubernetes/components/helmrelease` | Shared HelmRelease reconciliation settings |
+| `kubernetes/infrastructure/<layer>` | Platform layers, ordered bottom up by `dependsOn` in `infrastructure.yaml`                  |
+| `kubernetes/apps/<app>`             | The app's HelmRelease, plus its namespace, database and alerts where it owns them           |
+| `kubernetes/apps/barrelmaker`       | The namespace most apps share, with its quota and limit range                               |
+| `kubernetes/apps/obscura`           | Obscura's shared `base` and `prod`/`dev` overlays                                           |
+| `kubernetes/components/helmrelease` | Shared HelmRelease reconciliation settings                                                  |
 
 ## How deploys work
 - Merging to `main` deploys. Before merge, CI validates every kustomization's
@@ -119,35 +117,34 @@ Flux manages itself: upgrade Flux or its operator by editing
 - Every HelmRelease reverts changes made by hand to the objects its chart
   manages.
 - Infrastructure is never pruned: removing a file does not uninstall it. Every
-  chart's CRDs are marked `helm.sh/resource-policy: keep`. Namespaces and database
-  Clusters carry `kustomize.toolkit.fluxcd.io/prune: disabled`, so deleting
-  their files never deletes their data.
+  chart's CRDs are marked `helm.sh/resource-policy: keep`. Namespaces and
+  database Clusters carry `kustomize.toolkit.fluxcd.io/prune: disabled`, so
+  deleting their files never deletes their data.
 - Failed reconciliations post to Discord. Alertmanager also alerts when a Flux
   object stays not ready or a controller is down (`prometheusrule-flux.yaml`).
 - Flux cannot be pointed at a branch to test it: it syncs its own FluxInstance,
   which would point it back at `main`. Preview against the cluster with
   `flux diff kustomization` instead.
 
-## CoreDNS availability
-Talos owns CoreDNS; this repo adds a PodDisruptionBudget requiring one ready
-replica during drains. Respect the PDB and recover DNS if a drain blocks. It
-does not protect against node failure, direct pod deletion or Deployment
-rolling updates. The two replicas may share a node, so after maintenance or
-upgrades, check DNS readiness and placement and the `coredns` Flux
-Kustomization's health.
+## CoreDNS
+Talos owns CoreDNS; this repo only adds a PodDisruptionBudget keeping one
+replica ready through drains. If a drain blocks on it, get the other replica
+ready rather than overriding the PDB. It does not cover node failure or
+rollouts, and both replicas can land on one node, so after maintenance check
+that both are ready, on separate nodes.
 
 ## Telemetry
 Apps send OTLP to the OpenTelemetry collector, which routes traces to Tempo,
-logs to Loki, and metrics to Prometheus. Its pipelines apply memory backpressure
-before enrichment and batching. Prometheus also scrapes Tempo's internal metrics.
+logs to Loki, and metrics to Prometheus.
 
 ## Adding an app
 1. Create `kubernetes/apps/<app>/` with a `kustomization.yaml` and the app's
    HelmRelease, and `../../components/helmrelease` under `components` in that
    `kustomization.yaml`. Put it in the shared `barrelmaker` namespace, or give
-   it its own `namespace.yaml` with `kustomize.toolkit.fluxcd.io/prune: disabled`
-   that enforces the `restricted` Pod Security Standard, as the app namespaces
-   do. Charts from `charts.barrelmaker.dev` meet it with their default values.
+   it its own `namespace.yaml` with
+   `kustomize.toolkit.fluxcd.io/prune: disabled` that enforces the `restricted`
+   Pod Security Standard, as the app namespaces do. Charts from
+   `charts.barrelmaker.dev` meet it with their default values.
 2. Add a Flux Kustomization for it to `kubernetes/clusters/poseidon/apps.yaml`,
    with `prune: true` and the `dependsOn` its resources need (listed at the top
    of that file).
@@ -172,14 +169,15 @@ flux events -A                                    # Why something is not Ready
 - The CloudNativePG databases (`longhorn-cnpg-local`) are not backed up:
   replication protects against losing a node, not against losing data.
 - The Jellyfin media library lives on the NAS itself.
-- Loki and Tempo retain 30 days of logs and traces on PVCs; no object storage is configured.
+- Loki and Tempo retain 30 days of logs and traces on PVCs; no object storage
+  is configured.
 
 # Power
-The nodes, castor, pollux, Soteria and the router run off one UPS (CyberPower
+The nodes, castor, pollux, soteria and the router run off one UPS (CyberPower
 CP1500PFCLCDa), USB-connected to castor; the modem does not. Castor is the NUT
 primary, configured by `nut.yaml`. The secondaries are the Talos nodes, through
 the nut-client extension configured by `setup.yaml`; pollux, through the
-`nut_client` role in `nut.yaml`; and Soteria, through DSM.
+`nut_client` role in `nut.yaml`; and soteria, through DSM.
 
 On battery, a power loss plays out as:
 1. The driver raises low battery at 600s of runtime or 15% charge, whichever
@@ -202,13 +200,32 @@ Check the server and its clients with `upsc ups@castor.lan` and
 `upsc -c ups@castor.lan`. `sudo upsmon -c fsd` on castor tests the whole chain
 and shuts everything down for real.
 
+# DNS
+Castor and pollux each run Pi-hole on port 53, which forwards to its own
+unbound, a recursive, DNSSEC-validating resolver on port 5335. LAN clients,
+the cluster nodes and both hosts themselves resolve through the VIP
+(`192.168.15.80`), which keepalived keeps on castor while it is healthy. Every
+3 seconds keepalived checks each host: Pi-hole and unbound both resolve a name,
+and `wg0` is up. A check that fails twice in a row takes 60 off that host's
+priority (castor 150, pollux 100), so a single failing check on castor moves
+the VIP to pollux, and it moves back once castor passes again.
+
+`dns.yaml` installs Pi-hole once and manages it from
+`ansible/roles/pihole/defaults/main.yml`. Adlists, groups, clients and domain
+rules that are not in that file are deleted on the next run, so change them
+there, not in the web UI. Local records come from `lan_hosts` (see IP Plan).
+Run `dns.yaml` one host at a time (`--limit castor`, then `--limit pollux`): a
+config change restarts unbound, and the VIP needs one healthy resolver to stay
+up. Ansible never upgrades Pi-hole; do that with `sudo pihole -up`, one host at
+a time.
+
 # VPN
 Castor and pollux are both WireGuard servers on UDP 51820, with the same keys
 and peers, configured by `wireguard.yaml`. The router forwards the port to the
-DNS VIP, so the VPN runs on whichever host holds it; keepalived tracks `wg0`
-as well as Pi-hole, so either failing moves the VIP. Clients get an address in
-`10.33.167.0/24`, send all their traffic through the tunnel, and use the VIP
-(`192.168.15.80`) for DNS. Each host masquerades their traffic out of `eth0`.
+DNS VIP, so the VPN runs on whichever host holds it, and a failed `wg0` moves
+the VIP too (see DNS). Both servers are `10.33.167.1`; clients get an address
+in `10.33.167.0/24`, send all their traffic through the tunnel, and use the VIP
+for DNS. Each host masquerades their traffic out of `eth0`.
 
 When the VIP moves, clients reconnect to the other host in about 20 seconds:
 WireGuard starts a new handshake once 15 seconds of traffic go unanswered.
@@ -220,8 +237,8 @@ peer changes reload it without dropping them.
 
 The server's and peers' keys are in `ansible/vars/wireguard.sops.yaml`; the
 peer list and addresses are in `ansible/vars/wireguard.yaml`. To add a client:
-1. On the workstation, generate its keys: `wg genkey | tee client.key | wg pubkey`
-   and `wg genpsk`.
+1. On the workstation, generate its keys with
+   `wg genkey | tee client.key | wg pubkey` and `wg genpsk`.
 2. Add its public and preshared keys under its name in `wireguard.sops.yaml`
    (`sops ansible/vars/wireguard.sops.yaml`), and the name with the next free
    `/32` to `wireguard_peers`.
@@ -241,7 +258,7 @@ the inventory, the VIPs, NUT and NTP read it, and Pi-hole serves each entry as
 playbook uses it. Kubernetes manifests (MetalLB, the gateway, scrape targets,
 etcd endpoints) keep their own copies.
 
-### Cluster
+## Cluster
 | Name         | Address                     | Hostname           |
 |--------------|-----------------------------|--------------------|
 | Virtual IP   | 192.168.15.40               | kube.poseidon.lan  |
@@ -254,27 +271,15 @@ etcd endpoints) keep their own copies.
 | Niucraft     | 192.168.15.62               |                    |
 | Loch         | 192.168.15.63               |                    |
 
-### DNS
-| Name       | Address       | Hostname   | Role   |
-|------------|---------------|------------|--------|
-| Virtual IP | 192.168.15.80 |            |        |
-| Castor     | 192.168.15.70 | castor.lan | MASTER |
-| Pollux     | 192.168.15.30 | pollux.lan | BACKUP |
-
-### Other Hosts
-| Name    | Address       | Hostname    | Role                                         |
-|---------|---------------|-------------|----------------------------------------------|
-| Router  | 192.168.15.1  | openwrt.lan | Router and NTP server                        |
-| Soteria | 192.168.15.20 | soteria.lan | NAS: Longhorn backups, Jellyfin media        |
-| Demeter | 192.168.15.50 | demeter.lan | Workstation                                  |
-
-### VPN
-| Name                   | Address     |
-|------------------------|-------------|
-| Server (castor/pollux) | 10.33.167.1 |
-| fonso                  | 10.33.167.2 |
-| macbook                | 10.33.167.6 |
-| s26                    | 10.33.167.7 |
+## Hosts
+| Host    | Address       | Role                                     |
+|---------|---------------|------------------------------------------|
+| openwrt | 192.168.15.1  | Router and NTP server                    |
+| soteria | 192.168.15.20 | NAS: Longhorn backups, Jellyfin media    |
+| pollux  | 192.168.15.30 | DNS and VPN (VRRP backup), NUT secondary |
+| demeter | 192.168.15.50 | Workstation                              |
+| castor  | 192.168.15.70 | DNS and VPN (VRRP master), NUT primary   |
+| DNS VIP | 192.168.15.80 | Held by castor or pollux; no name        |
 
 # Cluster Bootstrap
 1. Generate the Talos machine configs and the ISO link:
@@ -284,8 +289,8 @@ etcd endpoints) keep their own copies.
    ```
 2. Boot the nodes from the ISO, then apply the configs and bootstrap etcd.
    `setup.yaml` writes configs to `~/.talos` by default; override it with
-   `-e talos_config_dir=/path/to/configs` if needed. Stay in `ansible/` so mise
-   keeps the tools active, and set `CONFIG_DIR` to the chosen path:
+   `-e talos_config_dir=/path/to/configs` if needed. Set `CONFIG_DIR` to the
+   chosen path:
    ```bash
    CONFIG_DIR="$HOME/.talos"
 
