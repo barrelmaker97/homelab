@@ -1,20 +1,31 @@
 ---
 - name: Install keepalived
   ansible.builtin.apt:
-    name:
-      - keepalived
-      - dnsutils
+    name: keepalived
     state: present
     update_cache: true
     cache_valid_time: 3600
 
-- name: Copy track script
-  ansible.builtin.copy:
-    src: check_pihole.sh
-    dest: /usr/local/bin/check_pihole.sh
-    owner: root
-    group: root
-    mode: '0755'
+# keepalived disables a track script it cannot find and keeps running, which
+# would quietly leave the VIP unguarded; fail here instead
+- name: Check track scripts are installed
+  ansible.builtin.stat:
+    path: "{{ item.path }}"
+  loop: "{{ keepalived_track_scripts }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: keepalived_track_script_stat
+
+- name: Fail if a track script is missing
+  ansible.builtin.assert:
+    that: item.stat.exists and item.stat.executable
+    fail_msg: >-
+      {{ item.item.path }} ({{ item.item.name }}) is missing or not executable.
+      Run the playbook of the role that installs it on this host first.
+    quiet: true
+  loop: "{{ keepalived_track_script_stat.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
 
 - name: Configure keepalived
   ansible.builtin.template:

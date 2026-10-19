@@ -1,9 +1,10 @@
 global_defs {
     enable_script_security
 }
+{% for check in keepalived_track_scripts %}
 
-vrrp_script chk_pihole {
-    script "/usr/local/bin/check_pihole.sh"
+vrrp_script {{ check.name }} {
+    script "{{ check.path }}"
     interval 3
     timeout 2
     fall 2
@@ -11,6 +12,7 @@ vrrp_script chk_pihole {
     weight -60
     user root
 }
+{% endfor %}
 
 vrrp_instance VI_1 {
     state {{ keepalived_state }}
@@ -22,6 +24,8 @@ vrrp_instance VI_1 {
         {{ keepalived_vip }}
     }
     track_script {
-        chk_pihole
+{% for check in keepalived_track_scripts %}
+        {{ check.name }}
+{% endfor %}
     }
 }

@@ -202,11 +202,18 @@ Check the server and its clients with `upsc ups@pollux.lan` and
 and shuts everything down for real.
 
 # VPN
-Pollux is a WireGuard server on UDP 51820, which the router forwards to it,
-configured by `wireguard.yaml`. Clients get an address in `10.33.167.0/24`,
-send all their traffic through the tunnel, and use the DNS VIP
-(`192.168.15.80`) for DNS, so their queries follow keepalived like the LAN's.
-Pollux masquerades their traffic out of `eth0`. Changes to the address, MTU or
+Castor and pollux are both WireGuard servers on UDP 51820, with the same keys
+and peers, configured by `wireguard.yaml`. The router forwards the port to the
+DNS VIP, so the VPN runs on whichever host holds it; keepalived tracks `wg0`
+as well as Pi-hole, so either failing moves the VIP. Clients get an address in
+`10.33.167.0/24`, send all their traffic through the tunnel, and use the VIP
+(`192.168.15.80`) for DNS. Each host masquerades their traffic out of `eth0`.
+
+When the VIP moves, clients reconnect to the other host in about 20 seconds:
+WireGuard starts a new handshake once 15 seconds of traffic go unanswered.
+A host that loses the VIP while still running can keep its clients, since
+WireGuard follows a peer that answers from a new address; using the VIP for
+DNS keeps their queries working either way. Changes to the address, MTU or
 NAT settings restart WireGuard, dropping clients for about 15 seconds; key and
 peer changes reload it without dropping them.
 
@@ -220,7 +227,7 @@ peer list and addresses are in `ansible/vars/wireguard.yaml`. To add a client:
 3. Run `ansible-playbook wireguard.yaml`.
 4. Give the client a config with its private key, `Address = <its IP>/24`,
    `DNS = 192.168.15.80`, and a `[Peer]` with the server's public key
-   (`sudo wg show wg0 public-key` on pollux), the preshared key,
+   (`sudo wg show wg0 public-key` on either host), the preshared key,
    `Endpoint = <public hostname>:51820` and `AllowedIPs = 0.0.0.0/0, ::/0`.
    Show it as a QR code for a phone with `qrencode -t ansiutf8 < client.conf`.
 
@@ -255,12 +262,12 @@ To remove a client, delete it from both files and run the playbook.
 | Demeter | 192.168.15.50 | demeter.lan | Workstation                                  |
 
 ### VPN
-| Name    | Address        |
-|---------|----------------|
-| Pollux  | 10.33.167.1    |
-| fonso   | 10.33.167.2    |
-| macbook | 10.33.167.6    |
-| s26     | 10.33.167.7    |
+| Name                   | Address     |
+|------------------------|-------------|
+| Server (castor/pollux) | 10.33.167.1 |
+| fonso                  | 10.33.167.2 |
+| macbook                | 10.33.167.6 |
+| s26                    | 10.33.167.7 |
 
 # Cluster Bootstrap
 1. Generate the Talos machine configs and the ISO link:
