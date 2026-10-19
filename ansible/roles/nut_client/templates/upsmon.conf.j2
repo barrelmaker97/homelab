@@ -1,0 +1,8 @@
+MONITOR {{ nut_host }} 1 {{ nut_client_user }} {{ nut_client_password }} secondary
+MINSUPPLIES 1
+SHUTDOWNCMD "/sbin/shutdown -h +0"
+POLLFREQ 5
+POLLFREQALERT 5
+DEADTIME 15
+NOCOMMWARNTIME 300
+FINALDELAY 5

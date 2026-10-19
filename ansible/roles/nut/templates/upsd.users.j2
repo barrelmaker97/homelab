@@ -13,6 +13,11 @@
   password = {{ nut_password }}
   upsmon secondary
 
+# Linux secondaries, through the nut_client role
+[{{ nut_client_user }}]
+  password = {{ nut_client_password }}
+  upsmon secondary
+
 # Synology DSM only connects as monuser
 [monuser]
   password = {{ nut_monuser_password }}

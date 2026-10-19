@@ -22,6 +22,9 @@ all:
             path: /usr/local/bin/check_wireguard.sh
     ups_servers:
       hosts:
+        castor:
+    ups_clients:
+      hosts:
         pollux:
     vpn_servers:
       hosts:
