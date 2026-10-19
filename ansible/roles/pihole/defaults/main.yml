@@ -2,7 +2,11 @@
 # Values are strings because pihole-FTL --config expects literal CLI arguments
 pihole_config:
   dns.upstreams: '["127.0.0.1#5335"]'
-  dns.hosts: '["192.168.15.30 pollux.lan", "192.168.15.20 soteria.lan", "192.168.15.1 openwrt.lan", "192.168.15.60 poseidon.lan", "192.168.15.40 kube.poseidon.lan", "192.168.15.41 node1-poseidon.lan", "192.168.15.42 node2-poseidon.lan", "192.168.15.43 node3-poseidon.lan", "192.168.15.50 demeter.lan", "192.168.15.70 castor.lan"]'
+  dns.hosts: >-
+    {{ lan_hosts | dict2items
+       | map(attribute='value')
+       | zip(lan_hosts | map('regex_replace', '$', '.' ~ local_domain))
+       | map('join', ' ') | to_json }}
   dns.cnameRecords: '["prometheus.soteria.lan,soteria.lan", "alertmanager.poseidon.lan,poseidon.lan", "prometheus.poseidon.lan,poseidon.lan", "longhorn.poseidon.lan,poseidon.lan", "grafana.soteria.lan,soteria.lan"]'
   dns.domainNeeded: "true"
   dns.interface: "eth0"

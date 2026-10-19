@@ -235,6 +235,12 @@ peer list and addresses are in `ansible/vars/wireguard.yaml`. To add a client:
 To remove a client, delete it from both files and run the playbook.
 
 # IP Plan
+`lan_hosts` in `ansible/group_vars/all.yaml` holds every address Ansible uses:
+the inventory, the VIPs, NUT and NTP read it, and Pi-hole serves each entry as
+`<name>.lan`. Change an address there, then run `dns.yaml` and whichever
+playbook uses it. Kubernetes manifests (MetalLB, the gateway, scrape targets,
+etcd endpoints) keep their own copies.
+
 ### Cluster
 | Name         | Address                     | Hostname           |
 |--------------|-----------------------------|--------------------|

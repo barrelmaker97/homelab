@@ -1,4 +1,13 @@
 ---
+# nut_server is the first ups_servers host; a second would run its own
+# primary that no secondary follows
+- name: Check there is one UPS server
+  ansible.builtin.assert:
+    that: groups['ups_servers'] | length == 1
+    fail_msg: ups_servers must hold exactly one host, the one the UPS is USB-connected to.
+    quiet: true
+  run_once: true
+
 - name: Install NUT
   ansible.builtin.apt:
     name:

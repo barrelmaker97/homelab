@@ -3,15 +3,15 @@ all:
     dns_servers:
       hosts:
         castor:
-          ansible_host: 192.168.15.70
+          ansible_host: "{{ lan_hosts.castor }}"
           keepalived_state: MASTER
           keepalived_priority: 150
         pollux:
-          ansible_host: 192.168.15.30
+          ansible_host: "{{ lan_hosts.pollux }}"
           keepalived_state: BACKUP
           keepalived_priority: 100
       vars:
-        keepalived_vip: 192.168.15.80
+        keepalived_vip: "{{ dns_vip }}"
         keepalived_interface: eth0
         keepalived_router_id: 51
         # Installed by the pihole and wireguard roles
