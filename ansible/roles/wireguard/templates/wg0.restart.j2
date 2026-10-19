@@ -1,0 +1,6 @@
+# Settings in wg0.conf that a reload does not apply. A change here restarts
+# wg-quick@wg0; a change to keys or peers alone only reloads it.
+Address = {{ wireguard_address }}
+MTU = {{ wireguard_mtu }}
+Subnet = {{ wireguard_subnet }}
+NatInterface = {{ wireguard_nat_interface }}

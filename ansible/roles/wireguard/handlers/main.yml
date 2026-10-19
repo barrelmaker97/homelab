@@ -1,0 +1,17 @@
+---
+- name: Apply WireGuard sysctl
+  ansible.builtin.command: sysctl --load /etc/sysctl.d/99-wireguard.conf
+  changed_when: true
+
+# A restart drops connected clients until they handshake again, in about
+# 15 seconds. Runs before the reload when both are notified.
+- name: Restart WireGuard
+  ansible.builtin.systemd:
+    name: wg-quick@wg0
+    state: restarted
+
+# Reload syncs keys, the port and peers without dropping connected clients.
+- name: Reload WireGuard
+  ansible.builtin.systemd:
+    name: wg-quick@wg0
+    state: reloaded

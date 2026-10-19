@@ -1,0 +1,16 @@
+---
+# Read by wireguard.yaml. Keys are kept in wireguard.sops.yaml beside this
+# file, the peers' public keys included: this repository is public.
+wireguard_secrets: "{{ lookup('community.sops.sops', playbook_dir ~ '/vars/wireguard.sops.yaml') | from_yaml }}"
+wireguard_private_key: "{{ wireguard_secrets.secrets.private_key }}"
+wireguard_peer_keys: "{{ wireguard_secrets.secrets.peers }}"
+
+# Each peer needs public_key and preshared_key under its name in
+# wireguard.sops.yaml, and one address in the VPN subnet.
+wireguard_peers:
+  - name: fonso
+    allowed_ips: 10.33.167.2/32
+  - name: macbook
+    allowed_ips: 10.33.167.6/32
+  - name: s26
+    allowed_ips: 10.33.167.7/32

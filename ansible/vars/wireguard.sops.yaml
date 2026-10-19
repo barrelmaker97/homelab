@@ -1,0 +1,27 @@
+secrets:
+    private_key: ENC[AES256_GCM,data:Jr5HRNZKbLldDGAZ/7HfMB5CK7pcOFHYDkyfIqy8PHTy9AZ+vOtfu+pmCdE=,iv:pzKJfVkcZ/GgFAe/yIsVGEN0DuVH+SbTn03/UDvml30=,tag:tRCBbAQLm+jGB+GnYMj8Eg==,type:str]
+    peers:
+        fonso:
+            public_key: ENC[AES256_GCM,data:oyMuOYWQngCYR+R19DufxnyDWowsi3I9aUeO6Vac8r6pkE4MVnnRQa+2ORk=,iv:RnhqmTOdn5QTlCSDj2a74qovyFe09svUEFvdDS9T0CU=,tag:wqcDklNMCXf9cyerQXywzQ==,type:str]
+            preshared_key: ENC[AES256_GCM,data:oZ7SP1MDByAUUvYe/41lvaEXmwddrVUblT4OWW64GawmPtff8LkxFhhfLIo=,iv:IGhs0XMlWK+nf/wRREv8YKy4Xt9vpHZf82x6snI8F2o=,tag:vyetHWbOBdMFk8x4tX7wPA==,type:str]
+        macbook:
+            public_key: ENC[AES256_GCM,data:DAUt0W9EZLVI8/KK51RKChk+fM/cjmUoapghJt7H7tK+Z5B88jbcdnrMY08=,iv:O8kTCfE4/Hhqo2RERrTXsxrW2Xa560N5ZYVPowvEQRM=,tag:jHFA8E3yrsteKc0Q03sdzg==,type:str]
+            preshared_key: ENC[AES256_GCM,data:1cdNoIpohDC+bSxVoeFoId0F4nZacJWDKxU36ixHHxrGuanbBTr0bPKF2Xw=,iv:EuMRGaZI1i2gMyilZ2mdqniLVl1mz/t2lQQcJcj27iI=,tag:kOxptZWIuxOyFYJ1u2hqZQ==,type:str]
+        s26:
+            public_key: ENC[AES256_GCM,data:LR2EalIWcsPcBjHhg+q8F+YWWA80qBwsAzebu14NjVtm+OrTuzLpMmMQhCY=,iv:MXfePEGltOlhCfWg2twTnMglwtkhyy2cyhMLlroXXjA=,tag:uVaLe0uJfNVUfI6Tk8ou8Q==,type:str]
+            preshared_key: ENC[AES256_GCM,data:VfoFOey+2C7lC3o4hTy9VzNH0amg6rspAAta91vM/uFtM+MdtKWK4iF09Uo=,iv:Dvf2Wj5ne9T/4JFnpj/oS3PQA75Mv42LTZa7hVr450U=,tag:6+5zrL91F8qRRemY11E05Q==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB0Uy9LZUpwZFRIT3BoYnVh
+            b1lxMk1oZHlYQjROUzBYVDRBV0hQc0ZKOUE0CkVsTHRCR2J5OTZOYmZSNlN0eGxM
+            YXhSU3ZJbXpBTXFiSnMvL0ZYSGJOQ1EKLS0tIGlTYStSK1A4YTZkMDJXRXdvQ2o0
+            WWM2QjVHc2Z6c004UitDSENaVG5lU0UKkLxHGjfqZbvlqwAzzVtkKVTD9E/bMyJ5
+            felSE81BILpenpCgGCVeGfGI+Uoyd9uH/Vnmqbw0+FAo/+6hlcvAiQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1wk5ucdcd2nzjs2ztpfhr2l0ds284p284f2c7grcmns7hsl0hp42syku7c6
+    encrypted_regex: (^data|^stringData|^cluster|^secrets|^jwtSecret|^certs|^trustdinfo|^credentialsJson|^secret_key$|.*[Pp]assword$)
+    lastmodified: "2026-10-19T05:57:51Z"
+    mac: ENC[AES256_GCM,data:NKV2wG425hzCFKMcJfc8e3pEid6foqkvF2ZFbIwipm9rAlH30niw85PGFNI6gevVD+iDwvhMlLuIX7ZEy+yQpdJPswoYlAQSZUimDjLDy/kuv6MEybJYfuwTfainDefblkDuILLJHZBrlMW4WSqmlnJEppq9SLMaqi7DnvkDDsQ=,iv:YsTPMuZ3QZQ0quOz2k7zrNxUYhn3ofj//D8q57WEWvM=,tag:/d9Ly9QAAP+wJjkIaXcZQg==,type:str]
+    version: 3.13.3
