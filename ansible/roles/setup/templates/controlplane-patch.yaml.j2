@@ -6,21 +6,35 @@ cluster:
 machine:
   certSANs:
     - "{{ node_hostname }}.{{ local_domain }}"
-  network:
-    interfaces:
-      - interface: "{{ interface_name }}"
-        dhcp: true
-        vip:
-          ip: "{{ cluster_vip }}"
-    extraHostEntries:
-      - ip: "{{ cluster_vip }}"
-        aliases:
-          - kube.{{ cluster_domain }}
-  time:
-      disabled: false
-      bootTimeout: 2m0s
-      servers:
-          - "{{ ntp_server }}"
+---
+apiVersion: v1alpha1
+kind: LinkConfig
+name: "{{ interface_name }}"
+up: true
+---
+apiVersion: v1alpha1
+kind: DHCPv4Config
+name: "{{ interface_name }}"
+---
+# The control plane endpoint, held by one node at a time
+apiVersion: v1alpha1
+kind: Layer2VIPConfig
+name: "{{ cluster_vip }}"
+link: "{{ interface_name }}"
+---
+# Resolves the endpoint without DNS, which runs outside the cluster
+apiVersion: v1alpha1
+kind: StaticHostConfig
+name: "{{ cluster_vip }}"
+hostnames:
+  - kube.{{ cluster_domain }}
+---
+apiVersion: v1alpha1
+kind: TimeSyncConfig
+bootTimeout: 2m0s
+ntp:
+  servers:
+    - "{{ ntp_server }}"
 ---
 apiVersion: v1alpha1
 kind: UnattendedInstallConfig
@@ -96,18 +110,3 @@ apiVersion: v1alpha1
 kind: HostnameConfig
 auto: off
 hostname: "{{ node_hostname }}"
----
-# talosctl gen config adds the next two as 1.14 defaults. The running nodes
-# predate them, so each is pinned to what the nodes do now until it has been
-# tested on its own. Workload isolation may cut Longhorn's v1 engine off from
-# the host's iscsid.
-apiVersion: v1alpha1
-kind: SecurityProfileConfig
-workloadIsolation: false
----
-# /var without nosuid and nodev
-apiVersion: v1alpha1
-kind: VolumeConfig
-name: EPHEMERAL
-mount:
-  secure: false
