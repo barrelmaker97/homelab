@@ -94,3 +94,29 @@ id=$(curl -fsS -X POST --data-binary @ansible/roles/setup/files/customization.ya
 test -n "$version" && test -n "$id"
 echo "factory.talos.dev/installer/${id}:v${version}"
 '''
+
+# Generates into a private temporary directory, so ~/.talos and the local
+# talosconfig are untouched. talosctl prints the diff with every certificate,
+# key and token in it, so the output is redacted before it is shown.
+[tasks."talos:diff"]
+description = "Dry-run setup.yaml's machine configs against the nodes, secrets redacted"
+depends = ["collections"]
+dir = "ansible"
+shell = "bash -euo pipefail -c"
+run = '''
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+if ! ansible-playbook setup.yaml --tags configs -e talos_config_dir="$tmp" > "$tmp/setup.log"; then
+  cat "$tmp/setup.log"
+  exit 1
+fi
+for config in "$tmp"/*.yaml; do
+  node=$(basename "$config" .yaml)
+  echo "== $node"
+  talosctl -n "$node.lan" apply-config --dry-run --file "$config" 2>&1 | sed -E \
+    -e '/-----BEGIN/,/-----END/{/-----(BEGIN|END)/!s/^([-+ ]?[[:space:]]*).*/\1<redacted>/}' \
+    -e 's/^([-+ ]?[[:space:]]*[A-Za-z]*([Kk]ey|crt|[Cc]ert|[Ss]ecret|[Tt]oken|[Pp]assword|clusterID|id):)[[:space:]]+[^|>[:space:]].*/\1 <redacted>/' \
+    -e 's/^([-+ ]?[[:space:]]*)[A-Za-z0-9+\/=._-]{32,}$/\1<redacted>/' \
+    -e 's/(MONITOR [^ ]+ [^ ]+ [^ ]+) [^ ]+/\1 <redacted>/'
+done
+'''

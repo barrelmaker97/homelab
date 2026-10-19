@@ -1,9 +1,12 @@
 ---
+# Tagged so `--tags configs` writes only the machine configs, without minting
+# a talosconfig certificate or adding another context
 - name: Create Talos config directory
   ansible.builtin.file:
     path: "{{ talos_config_dir }}"
     state: directory
     mode: '0700'
+  tags: [configs, talosconfig]
 
 - name: Get Talos Image ID
   ansible.builtin.uri:
@@ -12,15 +15,21 @@
     src: customization.yaml
     status_code: 201
   register: setup_factory_response
+  tags: [configs]
 
 - name: Create control node machine configs
   loop: "{{ node_names }}"
-  ansible.builtin.include_tasks: gen-config.yaml
+  ansible.builtin.include_tasks:
+    file: gen-config.yaml
+    apply:
+      tags: [configs]
+  tags: [configs]
 
 - name: Clean up machine config patch
   ansible.builtin.file:
     path: "{{ talos_config_dir }}/patch.yaml"
     state: absent
+  tags: [configs]
 
 - name: Generate Talos config
   changed_when: true
@@ -31,16 +40,19 @@
     --output-types=talosconfig
     --output "{{ talos_config_dir }}/talosconfig"
     "{{ cluster_host }}" "https://kube.{{ cluster_domain }}:{{ cluster_port }}"'
+  tags: [talosconfig]
 
 - name: Save Talos config
   changed_when: true
   ansible.builtin.command: >
     talosctl config merge "{{ talos_config_dir }}/talosconfig"
+  tags: [talosconfig]
 
 - name: Clean up generated talosconfig
   ansible.builtin.file:
     path: "{{ talos_config_dir }}/talosconfig"
     state: absent
+  tags: [talosconfig]
 
 - name: Add nodes to Talos config
   changed_when: true
@@ -52,6 +64,7 @@
       - talosctl
       - config
       - node
+  tags: [talosconfig]
 
 - name: Add endpoints to Talos config
   changed_when: true
@@ -63,6 +76,7 @@
       - talosctl
       - config
       - endpoint
+  tags: [talosconfig]
 
 - name: Print ISO download link
   ansible.builtin.debug:

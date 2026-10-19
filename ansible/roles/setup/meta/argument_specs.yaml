@@ -7,6 +7,8 @@ argument_specs:
         machine config per node and merges the generated talosconfig into the
         local Talos client configuration. talosctl and sops come from
         mise.toml.
+      - The machine configs are tagged configs and the talosconfig steps
+        talosconfig, so either can run alone.
     options:
       talos_config_dir:
         description: Directory on the Ansible controller the generated machine configs are written to.
