@@ -81,8 +81,9 @@ ansible-playbook dns.yaml --tags pihole
 
 None of them is meant to run on a schedule. Every run of `setup.yaml` mints a
 fresh Talos admin certificate and adds another context to `~/.talos/config`,
-and every run of `user.yaml` a fresh client certificate, so run them when
-building the cluster or renewing the kubeconfig. `flux.yaml` only acts on a
+unless it runs with `--tags configs` (see Node Configs), and every run of
+`user.yaml` a fresh client certificate, so run them when building the cluster
+or renewing the kubeconfig. `flux.yaml` only acts on a
 cluster missing Flux, or one that lost it. Each host playbook tags its roles by
 name, as in `--tags pihole`.
 
@@ -314,6 +315,13 @@ etcd endpoints) keep their own copies.
    ansible-playbook flux.yaml
    flux get kustomizations --watch
    ```
+
+# Node Configs
+`setup.yaml --tags configs` writes only the machine configs, without a new
+certificate or talosconfig context. `mise run talos:diff` generates them into
+a temporary directory and dry-runs each against its node, showing what
+`talosctl apply-config` would change, with certificates, keys and tokens
+redacted. It needs the personal age key and a working talosconfig.
 
 # Cluster Upgrade
 Renovate opens one PR for a new Talos release, bumping `talos_version` and
