@@ -323,6 +323,11 @@ a temporary directory and dry-runs each against its node, showing what
 `talosctl apply-config` would change, with certificates, keys and tokens
 redacted. It needs the personal age key and a working talosconfig.
 
+Apply a config to a drained node and reboot it before uncordoning. Network
+changes in particular: if they briefly drop the node's DHCP address, Talos
+picks a new default address and can settle on flannel's `cni0` bridge, which
+lands in the node's `/etc/hosts` until the next boot.
+
 # Cluster Upgrade
 Renovate opens one PR for a new Talos release, bumping `talos_version` and
 talosctl together. Merge it, `mise install`, then upgrade the nodes.
