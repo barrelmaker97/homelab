@@ -5,6 +5,6 @@ talos_version: "1.14.4"
 talos_config_dir: "{{ lookup('ansible.builtin.env', 'HOME', default=undef()) }}/.talos"
 
 # Rendered into the control plane machine config patch
-install_disk: /dev/nvme0n1
+node_subnet: 192.168.15.0/24
 interface_name: enp86s0
 ntp_server: "{{ lan_hosts.openwrt }}"
