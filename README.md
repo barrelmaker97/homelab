@@ -328,6 +328,10 @@ changes in particular: if they briefly drop the node's DHCP address, Talos
 picks a new default address and can settle on flannel's `cni0` bridge, which
 lands in the node's `/etc/hosts` until the next boot.
 
+Talos applies the manifests it owns (flannel, kube-proxy, CoreDNS) only when
+they are missing, so a config change to them reaches the cluster through
+`talosctl upgrade-k8s --to <current Kubernetes version>`, after `--dry-run`.
+
 # Cluster Upgrade
 Renovate opens one PR for a new Talos release, bumping `talos_version` and
 talosctl together. Merge it, `mise install`, then upgrade the nodes.
