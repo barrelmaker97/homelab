@@ -1,7 +1,7 @@
 # Read by vars/nut.yaml and group_vars/all.yaml: the upsd accounts on the NUT server.
 admin_password: ENC[AES256_GCM,data:+NF1kHLf7A==,iv:OIkOYL4Zh/5eFOP5hgMtiwkHvNseueG477txHu189PQ=,tag:nqMiUEcEHoSHD2Wv+jlspw==,type:str]
 localuser_password: ENC[AES256_GCM,data:yqsy3Ig3iQ==,iv:yXvlRbzHgGnxRDt4FW/2Xz+r4iMzX7qzvVGTKKBId7c=,tag:HdtFndddVgMCLdk+ehcQ+A==,type:str]
-remoteuser_password: ENC[AES256_GCM,data:Mmy2DqkKhw==,iv:pN6ELtYD2y8Og04dAn0BjjBzqxNnq1R/aKAvTmYS/i8=,tag:OS5o3dKRaCzmpp+G2F7z1g==,type:str]
+remoteuser_password: ENC[AES256_GCM,data:4QbEThqIgohrQ+evnQEp+Syv4Z3kzADkDVvOtgzgtWgahrqmFWo=,iv:tyQAXA1AjgpxDHYfvdWnLuwkMBcl0fh+GY2t3Af+6tk=,tag:fkC/fp3MZdsXzuINEi4jaQ==,type:str]
 monuser_password: ENC[AES256_GCM,data:/LPC8k4l8Ng0NAq8wpDm8pUnhDh/XY9O8w==,iv:4Y27jNYD8LZFX7+CyNovgRJITe84sD+V/GB4prV98RE=,tag:dD9EdfDSvzTyPkpcVjyDZg==,type:str]
 polluxuser_password: ENC[AES256_GCM,data:BkqrEeutHOl9uCbO0yscMfZSCnTtJOEPSW+S3fLBg2I=,iv:r0PiiTBsow9OGxExZ+btA04hMbtYbwxkmd90et1hpMc=,tag:BHbODtJYdHmuqADYw4Sj0g==,type:str]
 sops:
@@ -16,6 +16,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1wk5ucdcd2nzjs2ztpfhr2l0ds284p284f2c7grcmns7hsl0hp42syku7c6
     encrypted_regex: (^data|^stringData|^cluster|^secrets|^jwtSecret|^certs|^trustdinfo|^credentialsJson|^secret_key$|.*[Pp]assword$)
-    lastmodified: "2026-10-19T17:28:20Z"
-    mac: ENC[AES256_GCM,data:gQrNNfWTBEtEYIeYwCRnbcSkMXrnJjUKplq6NNTwfkkNjK8MkoXz47JrEO7iMo4oEscxFM584LuDQ1kWApHWC6kgSdx8DPEx8kwdo/Dntvx4AW0zkAWl1bqrxNU0ipfo7kypeFuFRXLU0JmISAF0oDFVJh40Aof2K3kXIBtcHWU=,iv:lDsSm4MyIaBpegJI4MrNuitNzfIwGJWZCm9Gh+xyWiA=,tag:hOPxWPOUWu2bma8V767PPQ==,type:str]
+    lastmodified: "2026-10-19T20:24:28Z"
+    mac: ENC[AES256_GCM,data:fQrzJlzP7kDsx+YnbkB013NomszCJU6Ys+52Hk625xHtLqWqf5DTuQeGc47vbDhXmw6L4numX3JIsq9imc0dQffVo4k7VnzfaeMlD0Df0gnsiUxLnFoNudThq8qNbWv98rQyXgto0W1KhPpPtw/3HC+sNeANzj4hK8XSg/422Is=,iv:6Na8HYMJcC4tTqb354Yc6aESGxB5idiSQ/6cV6ubljA=,tag:qOECXsjO1cOE8doJRBkcYg==,type:str]
     version: 3.13.3
