@@ -10,8 +10,6 @@ metadata:
 spec:
   description: "Production PostgreSQL cluster for Obscura"
   instances: 3
-  # Promote an upgraded replica rather than restarting the primary, which
-  # refuses new connections for the full smart shutdown timeout.
   primaryUpdateMethod: switchover
   enablePDB: true
   enableSuperuserAccess: false
