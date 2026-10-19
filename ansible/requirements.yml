@@ -10,4 +10,4 @@ collections:
     version: "2.5.0"
   # openssl_privatekey, openssl_csr
   - name: community.crypto
-    version: "3.5.0"
+    version: "3.5.1"
