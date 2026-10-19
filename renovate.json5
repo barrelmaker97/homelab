@@ -52,6 +52,9 @@
       managerFilePatterns: ['/^kubernetes/.+\\.ya?ml$/'],
       matchStrings: ['imageName: (?<depName>[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]+)'],
       datasourceTemplate: 'docker',
+      // Tags carry the build timestamp, e.g. 18.6-202610190957-standard-trixie,
+      // so a weekly rebuild is a patch and a PostgreSQL minor is a minor.
+      versioningTemplate: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)-(?<patch>\\d{12})-(?<compatibility>.+)$',
     },
     {
       description: 'ansible-core in the shared playbook and lint environment',
@@ -113,6 +116,12 @@
       commitMessageSuffix: '(prod)',
       minimumReleaseAge: '3 days',
       prBodyNotes: ['Promote only once this version has run in obscura-dev (devscura.barrelmaker.dev) without problems.'],
+    },
+    {
+      description: 'GHCR publishes no release timestamps, so the age check above would hold Postgres images forever',
+      matchFileNames: ['kubernetes/apps/obscura/prod/**'],
+      matchDepNames: ['ghcr.io/cloudnative-pg/postgresql'],
+      minimumReleaseAgeBehaviour: 'timestamp-optional',
     },
     {
       description: 'Tooling never reaches the cluster: it merges without a PR once CI passes on the branch, and a failure opens one. The tools grouped with Talos, Flux and CloudNativePG stay PRs',
