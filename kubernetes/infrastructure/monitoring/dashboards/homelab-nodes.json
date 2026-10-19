@@ -78,6 +78,10 @@
               {
                 "color": "transparent",
                 "value": 0
+              },
+              {
+                "color": "red",
+                "value": 1
               }
             ]
           },
@@ -175,15 +179,15 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "editorMode": "builder",
-          "expr": "node_load5{job=\"nodes\"} / (count without(cpu, mode) (node_cpu_seconds_total{mode=\"idle\"}))",
+          "editorMode": "code",
+          "expr": "node_load5{job=\"nodes\"} / count without(cpu, mode) (node_cpu_seconds_total{job=\"nodes\", mode=\"idle\"})",
           "interval": "",
           "legendFormat": "{{node_name}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Load Average",
+      "title": "Load per Core",
       "type": "timeseries"
     },
     {
@@ -313,7 +317,7 @@
             "uid": "prometheus"
           },
           "exemplar": false,
-          "expr": "1-node_filesystem_avail_bytes{mountpoint=\"/volume1\", instance=\"soteria.lan:9100\"}/node_filesystem_size_bytes{mountpoint=\"/volume1\", instance=\"soteria.lan:9100\"}",
+          "expr": "1 - node_filesystem_avail_bytes{job=\"nodes\", mountpoint=\"/\", node_name!=\"Soteria\"} / node_filesystem_size_bytes{job=\"nodes\", mountpoint=\"/\", node_name!=\"Soteria\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "{{node_name}}",
@@ -325,7 +329,7 @@
             "uid": "prometheus"
           },
           "exemplar": false,
-          "expr": "1-node_filesystem_avail_bytes{mountpoint=\"/\", instance=\"pollux.lan:9100\"}/node_filesystem_size_bytes{mountpoint=\"/\", instance=\"pollux.lan:9100\"}",
+          "expr": "1 - node_filesystem_avail_bytes{job=\"nodes\", mountpoint=\"/volume1\", node_name=\"Soteria\"} / node_filesystem_size_bytes{job=\"nodes\", mountpoint=\"/volume1\", node_name=\"Soteria\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "{{node_name}}",
@@ -390,7 +394,8 @@
               }
             ]
           },
-          "unit": "percentunit"
+          "unit": "percentunit",
+          "min": 0
         },
         "overrides": [
           {
@@ -553,7 +558,7 @@
               },
               {
                 "color": "red",
-                "value": 70
+                "value": 80
               }
             ]
           },
@@ -664,10 +669,171 @@
       ],
       "title": "CPU Temperature",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line+area"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "decbytes",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Castor"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Pollux"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Router"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Soteria"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum by (node_name) (increase(node_disk_written_bytes_total{job=\"nodes\", device=~\"mmcblk[0-9]+|sd[a-z]+|nvme[0-9]+n[0-9]+|md[0-9]+\"}[1d]))",
+          "interval": "",
+          "legendFormat": "{{node_name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Disk Writes per Day",
+      "type": "timeseries",
+      "description": "Data written to each node's disks over the previous 24 hours. Whole devices only: the Pis' SD cards (or a future SSD) and Soteria's RAID arrays."
     }
   ],
   "preload": false,
-  "refresh": "10s",
+  "refresh": "30s",
   "schemaVersion": 42,
   "tags": [
     "HomeLab"
