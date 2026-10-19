@@ -97,7 +97,7 @@ kind: HostnameConfig
 auto: off
 hostname: "{{ node_hostname }}"
 ---
-# talosctl gen config adds the next three as 1.14 defaults. The running nodes
+# talosctl gen config adds the next two as 1.14 defaults. The running nodes
 # predate them, so each is pinned to what the nodes do now until it has been
 # tested on its own. Workload isolation may cut Longhorn's v1 engine off from
 # the host's iscsid.
@@ -111,9 +111,3 @@ kind: VolumeConfig
 name: EPHEMERAL
 mount:
   secure: false
----
-# Cluster discovery off
-apiVersion: v1alpha1
-kind: DiscoveryServiceConfig
-name: default
-$patch: delete
