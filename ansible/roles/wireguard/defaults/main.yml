@@ -1,7 +1,6 @@
 ---
 # The server's address on the VPN, and the subnet clients are given addresses
-# from. Clients use the server's address for DNS, which Pi-hole answers since
-# its LOCAL listening mode accepts queries from any attached subnet.
+# from. Clients use the DNS VIP, reached through the tunnel.
 wireguard_address: 10.33.167.1/24
 wireguard_subnet: 10.33.167.0/24
 

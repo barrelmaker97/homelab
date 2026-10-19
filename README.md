@@ -204,12 +204,14 @@ and shuts everything down for real.
 # VPN
 Pollux is a WireGuard server on UDP 51820, which the router forwards to it,
 configured by `wireguard.yaml`. Clients get an address in `10.33.167.0/24`,
-send all their traffic through the tunnel, and use pollux (`10.33.167.1`) for
-DNS. Pollux masquerades their traffic out of `eth0`.
+send all their traffic through the tunnel, and use the DNS VIP
+(`192.168.15.80`) for DNS, so their queries follow keepalived like the LAN's.
+Pollux masquerades their traffic out of `eth0`. Changes to the address, MTU or
+NAT settings restart WireGuard, dropping clients for about 15 seconds; key and
+peer changes reload it without dropping them.
 
 The server's and peers' keys are in `ansible/vars/wireguard.sops.yaml`; the
-peer list and addresses are in `ansible/vars/wireguard.yaml`. Peer changes
-reload WireGuard without dropping connected clients. To add a client:
+peer list and addresses are in `ansible/vars/wireguard.yaml`. To add a client:
 1. On the workstation, generate its keys: `wg genkey | tee client.key | wg pubkey`
    and `wg genpsk`.
 2. Add its public and preshared keys under its name in `wireguard.sops.yaml`
@@ -217,7 +219,7 @@ reload WireGuard without dropping connected clients. To add a client:
    `/32` to `wireguard_peers`.
 3. Run `ansible-playbook wireguard.yaml`.
 4. Give the client a config with its private key, `Address = <its IP>/24`,
-   `DNS = 10.33.167.1`, and a `[Peer]` with the server's public key
+   `DNS = 192.168.15.80`, and a `[Peer]` with the server's public key
    (`sudo wg show wg0 public-key` on pollux), the preshared key,
    `Endpoint = <public hostname>:51820` and `AllowedIPs = 0.0.0.0/0, ::/0`.
    Show it as a QR code for a phone with `qrencode -t ansiutf8 < client.conf`.
