@@ -1,5 +1,10 @@
+# etcd and the kubelet use the node's LAN address. Each node also has an IPv6
+# ULA, pod network addresses and sometimes the VIP, so selection is pinned.
 cluster:
   etcd:
+    advertisedSubnets:
+      - "{{ node_subnet }}"
+      - "!{{ cluster_vip }}/32"
     extraArgs:
       listen-metrics-urls: http://0.0.0.0:2381
 
@@ -42,12 +47,17 @@ installer:
   image: factory.talos.dev/installer/{{ setup_factory_response.json.id }}:v{{ talos_version }}
 provisioning:
   diskSelector:
-    match: disk.dev_path == "{{ install_disk }}"
+    # The only NVMe disk; Longhorn's disk is SATA and its volumes attach as iSCSI
+    match: disk.transport == "nvme"
   wipe: false
 ---
 # Run workloads on the control plane nodes, which are the only nodes.
 apiVersion: v1alpha1
 kind: KubeNodeConfig
+nodeIP:
+  validSubnets:
+    - "{{ node_subnet }}"
+    - "!{{ cluster_vip }}/32"
 taints:
   node-role.kubernetes.io/control-plane:
     $patch: delete

@@ -43,8 +43,8 @@ argument_specs:
         description: LAN domain suffix appended to node hostnames.
         type: str
         required: true
-      install_disk:
-        description: Device Talos installs itself onto.
+      node_subnet:
+        description: LAN subnet etcd and the kubelet advertise node addresses from.
         type: str
         required: true
       interface_name:
