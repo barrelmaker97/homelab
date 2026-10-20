@@ -138,6 +138,29 @@ that both are ready, on separate nodes.
 Apps send OTLP to the OpenTelemetry collector, which routes traces to Tempo,
 logs to Loki, and metrics to Prometheus.
 
+## Network policy
+kube-network-policies, running beside flannel, enforces standard
+NetworkPolicy; there is no cluster-wide policy. Policies only add access, so
+a chart's policy cannot be narrowed by another one, only through its values.
+
+- A chart's policies cover traffic between its own components (Longhorn,
+  Flux), tuned through its values.
+- `networkpolicy.yaml` beside a release covers traffic between components:
+  the gateway to an app, Prometheus to its targets, an app to its database.
+- A chart policy that needs every rule written into its values is left off
+  in favour of `networkpolicy.yaml`.
+
+Policy applies to traffic from other nodes' hosts, such as an API server
+calling a webhook, which arrives from that node's `flannel.1` address
+(`10.244.<n>.0`), but not to a node's traffic to its own pods, such as kubelet
+probes. Only new connections are checked, so after a change, restart a
+client to test it. Drops are logged, and the logs turn over within minutes:
+
+```bash
+kubectl -n kube-system logs -f -l k8s-app=flannel -c kube-network-policies \
+  --max-log-requests=3 | grep -B8 'verdict="drop"'
+```
+
 ## Adding an app
 1. Create `kubernetes/apps/<app>/` with a `kustomization.yaml` and the app's
    HelmRelease, and `../../components/helmrelease` under `components` in that
