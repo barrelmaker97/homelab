@@ -139,24 +139,17 @@ Apps send OTLP to the OpenTelemetry collector, which routes traces to Tempo,
 logs to Loki, and metrics to Prometheus.
 
 ## Network policy
-kube-network-policies, running beside flannel, enforces standard
-NetworkPolicy; there is no cluster-wide policy. Policies only add access, so
-a chart's policy cannot be narrowed by another one, only through its values.
+kube-network-policies, beside flannel, enforces standard NetworkPolicy; there
+is no cluster-wide policy. Policies only add access, so a chart's policies are
+tuned through its values, and cover only traffic between its own components.
+Traffic between components, such as the gateway to an app or an app to its
+database, goes in `networkpolicy.yaml` beside the release.
 
-- A chart's policies cover traffic between its own components (Longhorn,
-  Flux), tuned through its values.
-- `networkpolicy.yaml` beside a release covers traffic between components:
-  the gateway to an app, Prometheus to its targets, an app to its database.
-- A chart policy that needs every rule written into its values is left off
-  in favour of `networkpolicy.yaml`.
-
-Policy applies to traffic from other nodes' hosts, such as an API server
-calling a webhook, which arrives from that node's `flannel.1` address
-(`10.244.<n>.0`), but not to a node's traffic to its own pods, such as kubelet
-probes. Webhook ports stay open to every pod rather than listing those
-addresses, which change when a node is replaced, since a missed one fails
-API requests at random. Only new connections are checked, so after a change, restart a
-client to test it. Drops are logged, and the logs turn over within minutes:
+Webhook ports stay open to every pod: API servers on other nodes call them
+from each node's pod subnet address, which changes when a node is replaced.
+Only new connections are checked, so restart a client to test a change. Drops
+are logged (a source of `10.244.<n>.0` is another node's host), and the logs
+turn over within minutes:
 
 ```bash
 kubectl -n kube-system logs -f -l k8s-app=flannel -c kube-network-policies \
