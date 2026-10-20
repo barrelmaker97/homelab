@@ -153,7 +153,9 @@ a chart's policy cannot be narrowed by another one, only through its values.
 Policy applies to traffic from other nodes' hosts, such as an API server
 calling a webhook, which arrives from that node's `flannel.1` address
 (`10.244.<n>.0`), but not to a node's traffic to its own pods, such as kubelet
-probes. Only new connections are checked, so after a change, restart a
+probes. Webhook ports stay open to every pod rather than listing those
+addresses, which change when a node is replaced, since a missed one fails
+API requests at random. Only new connections are checked, so after a change, restart a
 client to test it. Drops are logged, and the logs turn over within minutes:
 
 ```bash

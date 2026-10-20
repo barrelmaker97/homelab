@@ -62,12 +62,3 @@ spec:
       storageMinimalAvailablePercentage: "10"
     httproute:
       enabled: false
-    networkPolicies:
-      # Admits the API servers to the admission and conversion webhooks, which
-      # are otherwise open to every pod. A node's API server reaches pods on
-      # other nodes from its flannel.1 address (.0) and its own from cni0
-      # (.1); each /31 is one node's pair. Add a node's pair when it joins.
-      kubeAPIServerSourceCIDRs:
-        - 10.244.0.0/31
-        - 10.244.1.0/31
-        - 10.244.2.0/31
