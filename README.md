@@ -12,14 +12,14 @@ Flux manages the infrastructure and applications declared in this repository.
 
 ## Tools and checks
 
-Tool versions are declared in `mise.toml`; CI installs the tools each job needs
-from that file. Ansible collections are pinned in `ansible/requirements.yml`.
+Tool versions are declared in `mise.toml`; CI installs each job's tools from
+that file. Ansible collections are pinned in `ansible/requirements.yml`.
 [Install mise](https://mise.jdx.dev/installing-mise.html), activate it in your
 shell, then from the repository root:
 
 ```bash
 mise install
-mise run collections  # the Ansible collections in ansible/requirements.yml
+mise run collections
 ```
 
 Local checks and CI use the same mise tasks. These checks do not apply changes
@@ -64,11 +64,10 @@ them available to Flux; Ansible changes require running the relevant playbook.
 - Major updates require approval in the Dependency Dashboard.
 - kubectl gets patches only; minor upgrades follow the cluster upgrade.
 - PostgreSQL major versions are disabled: they are data migrations.
-- Obscura's dev overlay is its test deployment. Dev and prod updates
-  get separate PRs; prod waits until the upstream release is at least three
-  days old, not three days after deployment to dev. Merge prod's only once the
-  version has run in dev. PostgreSQL images may bypass the age check when no
-  release timestamp is available.
+- Obscura's dev overlay is its test deployment. Dev and prod updates get separate
+  PRs. Prod requires an upstream release age of three days, not three days in
+  dev; verify it in dev before promotion. PostgreSQL images bypass the age check
+  when no release timestamp is available.
 - Minor, patch and digest updates to ungrouped tooling in `mise.toml` and
   GitHub Actions are eligible for branch automerge after CI passes, on Mondays.
   The tools grouped with Flux, Talos and CloudNativePG still use PRs.
@@ -87,7 +86,7 @@ ansible-playbook dns.yaml --tags pihole
 | Playbook             | Targets                      | Purpose                                                    |
 |----------------------|------------------------------|------------------------------------------------------------|
 | `setup.yaml`         | localhost                    | Generate Talos machine configs for the control plane nodes |
-| `user.yaml`          | localhost                    | Issue a cluster-admin client certificate and write a kubeconfig |
+| `user.yaml`          | localhost                    | Issue a cluster-admin certificate and kubeconfig          |
 | `flux.yaml`          | localhost                    | Bootstrap Flux on a cluster that has none                  |
 | `dns.yaml`           | `dns_servers`                | Install unbound, Pi-hole and keepalived                    |
 | `dewpoint.yaml`      | `dns_servers`                | Install the dewpoint Govee sensor exporter                 |
@@ -117,20 +116,17 @@ Flux manages itself: upgrade Flux or its operator by editing
 |-------------------------------------|---------------------------------------------------------------------------------------------|
 | `kubernetes/clusters/poseidon`      | Flux itself (`flux-system/`), chart sources, and the infrastructure/app Flux Kustomizations |
 | `kubernetes/infrastructure/<layer>` | Platform layers, ordered bottom up by `dependsOn` in `infrastructure.yaml`                  |
-| `kubernetes/apps/<app>`             | The app's HelmRelease, plus its namespace, database and alerts where it owns them           |
+| `kubernetes/apps/<app>`             | Application manifests, including HelmReleases, routes and owned resources                 |
 | `kubernetes/apps/barrelmaker`       | The namespace most apps share, with its quota and limit range                               |
 | `kubernetes/apps/obscura`           | Obscura's shared `base` and `prod`/`dev` overlays                                           |
 | `kubernetes/components/helmrelease` | Shared HelmRelease reconciliation settings                                                  |
 
 ### Deployment behavior
 
-- Flux reconciles Kubernetes changes merged to `main`. CI validates each
-  standalone Kustomize build's
-  schema (kubeconform), renders the whole cluster offline the way Flux will,
-  charts and post-renderers included
-  ([flate](https://github.com/home-operations/flate)), and comments the
-  rendered diff on the PR when nonempty. Preview locally with
-  `mise run kubernetes:diff`; encrypted values and live state are not verified.
+- Flux reconciles Kubernetes changes merged to `main`. CI validates manifests
+  with kubeconform and renders charts and post-renderers with
+  [flate](https://github.com/home-operations/flate). Nonempty rendered diffs are
+  posted on PRs; encrypted values and live state are not verified.
 - Infrastructure and app Flux Kustomizations reconcile every 10 minutes and
   wait for their resources to become healthy. `dependsOn` controls ordering.
 - HelmReleases use `RetryOnFailure`: failed installs or upgrades are retried
@@ -153,11 +149,10 @@ Flux manages itself: upgrade Flux or its operator by editing
 
 ### CoreDNS
 
-Talos owns CoreDNS; this repo only adds a PodDisruptionBudget keeping one
-replica ready through drains. If a drain blocks on it, get the other replica
-ready rather than overriding the PDB. It does not cover node failure or
-rollouts, and both replicas can land on one node, so after maintenance check
-that both are ready, on separate nodes.
+Talos owns CoreDNS; this repository adds a PodDisruptionBudget with
+`minAvailable: 1`. If a drain blocks, restore a ready replica rather than
+overriding the budget. The budget does not prevent node failures or control
+replica placement; check readiness and node distribution after maintenance.
 
 ### Telemetry
 
@@ -167,17 +162,13 @@ also scrapes configured cluster and host exporters.
 
 ### Network policy
 
-kube-network-policies, beside flannel, enforces standard NetworkPolicy; there
-is no cluster-wide policy. Policies only add access, so a chart's policies are
-tuned through its values, and cover only traffic between its own components.
-Traffic between components, such as the gateway to an app or an app to its
-database, goes in `networkpolicy.yaml` beside the release.
+The Talos machine config enables kube-network-policies alongside flannel.
+There is no repository-wide default-deny policy. Configure chart-provided
+policies through chart values; add access between components in manifests
+beside the release. Longhorn's `networkpolicy.yaml` permits Prometheus scraping
+and gateway access to its UI. NetworkPolicy allow rules are additive.
 
-Webhook ports stay open to every pod: API servers on other nodes call them
-from each node's pod subnet address, which changes when a node is replaced.
-Only new connections are checked, so restart a client to test a change. Drops
-are logged (a source of `10.244.<n>.0` is another node's host), and the logs
-turn over within minutes:
+Inspect dropped traffic with:
 
 ```bash
 kubectl -n kube-system logs -f -l k8s-app=flannel -c kube-network-policies \
@@ -191,16 +182,14 @@ kubectl -n kube-system logs -f -l k8s-app=flannel -c kube-network-policies \
    `kustomization.yaml`. Put it in the shared `barrelmaker` namespace, or give
    it its own `namespace.yaml` with
    `kustomize.toolkit.fluxcd.io/prune: disabled` that enforces the `restricted`
-   Pod Security Standard, as the app namespaces do. Charts from
-   `charts.barrelmaker.dev` meet it with their default values.
+   Pod Security Standard. Verify that the chart's pod settings meet it.
 2. Add a Flux Kustomization for it to `kubernetes/clusters/poseidon/apps.yaml`,
    with `prune: true` and the `dependsOn` its resources need (listed at the top
    of that file).
 3. Declare any required Helm/OCI source in
    `kubernetes/clusters/poseidon/repositories.yaml`.
 4. Add encrypted Kubernetes Secrets and reference them through the chart's
-   existing-secret settings. Follow the app's Kustomize relative paths; an
-   overlay may need a different path to the shared HelmRelease component.
+   existing-secret settings.
 
 ### Routine operations
 
@@ -248,29 +237,30 @@ output. Check actual shutdown times before changing `nut_ups_offdelay` or
 `nut_ups_runtime_low`. Power-on behavior after an outage depends on each
 device's firmware settings.
 
-DSM cannot set the UPS name or credentials: it always connects to `ups` as
-`monuser`, which is why the server keeps both. Point it at castor under
+The server provides the `ups` device and `monuser` account for DSM.
+Point DSM at castor under
 **Control Panel > Hardware and Power > UPS** as a Synology UPS server.
 
 Check the server and its clients with `upsc ups@castor.lan` and
-`upsc -c ups@castor.lan`. `sudo upsmon -c fsd` on castor tests the whole chain
-and shuts everything down for real.
+`upsc -c ups@castor.lan`.
+
+**Shutdown test:** `sudo upsmon -c fsd` on castor shuts down the entire chain
+and cuts UPS output. Run it only during a planned maintenance window.
 
 ### DNS
 
 Castor and pollux each run Pi-hole on port 53, which forwards to its own
-unbound, a recursive, DNSSEC-validating resolver on port 5335. LAN clients,
-the cluster nodes and both hosts themselves resolve through the VIP
-(`192.168.15.80`), which keepalived keeps on castor while it is healthy. Every
+unbound, a recursive, DNSSEC-validating resolver on port 5335. The DNS entry
+point is the VIP (`192.168.15.80`), which keepalived prefers on castor. Every
 3 seconds keepalived checks each host: Pi-hole and unbound both resolve a name,
 and `wg0` is up. A check that fails twice in a row takes 60 off that host's
-priority (castor 150, pollux 100), so a single failing check on castor moves
-the VIP to pollux, and it moves back once castor passes again.
+priority (castor 150, pollux 100). A failing check on castor moves the VIP to
+pollux if pollux is healthy; castor takes it back after recovery.
 
 `dns.yaml` installs Pi-hole once and manages it from
-`ansible/roles/pihole/defaults/main.yml`. Adlists, groups, clients and domain
-rules that are not in that file are deleted on the next run, so change them
-there, not in the web UI. Local records come from `lan_hosts` (see IP Plan).
+`ansible/roles/pihole/defaults/main.yml`. It reconciles adlists, groups, clients
+and domain rules to that file, removing unmanaged entries; edit it rather than
+the web UI. Local records come from `lan_hosts`.
 Run `dns.yaml` one host at a time (`--limit castor`, then `--limit pollux`): a
 config change restarts unbound, and the VIP needs one healthy resolver to stay
 up. Ansible never upgrades Pi-hole; do that with `sudo pihole -up`, one host at
@@ -280,10 +270,10 @@ a time.
 
 Castor and pollux are both WireGuard servers on UDP 51820, with the same keys
 and peers, configured by `wireguard.yaml`. The router forwards the port to the
-DNS VIP, so the VPN runs on whichever host holds it, and a failed `wg0` moves
-the VIP too (see DNS). Both servers are `10.33.167.1`; clients get an address
-in `10.33.167.0/24`, send all their traffic through the tunnel, and use the VIP
-for DNS. Each host masquerades their traffic out of `eth0`.
+DNS VIP, so new connections reach whichever host holds it. A failed `wg0`
+also affects VIP priority. Both servers are `10.33.167.1`; clients use
+`10.33.167.0/24` and the VIP for DNS. Each host masquerades IPv4 tunnel traffic
+out of `eth0`; IPv6 routing is not configured.
 
 VIP failover does not transfer WireGuard session state; clients must
 re-establish sessions with the other host. Changes to the address, MTU or NAT
@@ -293,16 +283,17 @@ settings restart WireGuard and interrupt clients; key and peer changes use
 The server's and peers' keys are in `ansible/vars/wireguard.sops.yaml`; the
 peer list and addresses are in `ansible/vars/wireguard.yaml`. To add a client:
 1. On the workstation, generate its keys with
-   `wg genkey | tee client.key | wg pubkey` and `wg genpsk`.
+   `umask 077; wg genkey | tee client.key | wg pubkey` and `wg genpsk`.
 2. Add its public and preshared keys under its name in `wireguard.sops.yaml`
    (`sops ansible/vars/wireguard.sops.yaml`), and the name with the next free
    `/32` to `wireguard_peers`.
-3. Run `ansible-playbook wireguard.yaml`.
+3. From `ansible/`, run `ansible-playbook wireguard.yaml`.
 4. Give the client a config with its private key, `Address = <its IP>/24`,
    `DNS = 192.168.15.80`, and a `[Peer]` with the server's public key
    (`sudo wg show wg0 public-key` on either host), the preshared key,
    `Endpoint = <public hostname>:51820` and `AllowedIPs = 0.0.0.0/0, ::/0`.
-   Show it as a QR code for a phone with `qrencode -t ansiutf8 < client.conf`.
+   This routes IPv6 into the tunnel without providing IPv6 connectivity.
+   For a phone, display the config with `qrencode -t ansiutf8 < client.conf`.
 
 To remove a client, delete it from both files and run the playbook.
 
@@ -358,13 +349,15 @@ etcd endpoints) keep their own copies.
 
    # Node 1
    talosctl -n node1-poseidon.lan apply-config --insecure --file "$CONFIG_DIR/node1-poseidon.yaml"
-   talosctl -n node1-poseidon.lan -e node1-poseidon.lan bootstrap
 
    # Node 2
    talosctl -n node2-poseidon.lan apply-config --insecure --file "$CONFIG_DIR/node2-poseidon.yaml"
 
    # Node 3
    talosctl -n node3-poseidon.lan apply-config --insecure --file "$CONFIG_DIR/node3-poseidon.yaml"
+
+   # Bootstrap etcd once, after the nodes have applied their configs
+   talosctl -n node1-poseidon.lan -e node1-poseidon.lan bootstrap
    ```
 3. Create the cluster user and the local kubeconfig, from `ansible/`:
    ```bash
@@ -379,20 +372,18 @@ etcd endpoints) keep their own copies.
 
 ### Node configuration
 
-`setup.yaml --tags configs` writes only the machine configs, without a new
-certificate or talosconfig context. `mise run talos:diff` generates them into
-a temporary directory and dry-runs each against its node, showing what
-`talosctl apply-config` would change, with certificates, keys and tokens
-redacted. It needs the personal age key and a working talosconfig.
+`ansible-playbook setup.yaml --tags configs` writes only machine configs,
+without a new certificate or talosconfig context. `mise run talos:diff`
+generates them in a temporary directory and dry-runs each against its node,
+redacting certificates, keys and tokens from the diff. It needs the personal
+age key and a working talosconfig.
 
-Apply a config to a drained node and reboot it before uncordoning. Network
-changes in particular: if they briefly drop the node's DHCP address, Talos
-picks a new default address and can settle on flannel's `cni0` bridge, which
-lands in the node's `/etc/hosts` until the next boot.
+Apply configs one drained node at a time. After network changes, reboot and
+verify the node's addresses and readiness before uncordoning.
 
-Talos applies the manifests it owns (flannel, kube-proxy, CoreDNS) only when
-they are missing, so a config change to them reaches the cluster through
-`talosctl upgrade-k8s --to <current Kubernetes version>`, after `--dry-run`.
+To reconcile changes to Talos-managed Kubernetes manifests (flannel,
+kube-proxy and CoreDNS), run
+`talosctl upgrade-k8s --to <current Kubernetes version>`, first with `--dry-run`.
 
 ### Upgrades
 
