@@ -1,0 +1,15 @@
+---
+argument_specs:
+  main:
+    short_description: Harden the OpenSSH server configuration
+    description:
+      - Installs a drop-in under /etc/ssh/sshd_config.d/ restricting sshd to
+        modern key exchange, AEAD ciphers and ETM MACs, public-key login for
+        ansible_user only, and verbose auth logging, validated with sshd -t
+        before reloading ssh.
+    options:
+      ansible_user:
+        description:
+          - SSH login user permitted by AllowUsers. Set in group_vars/all.yaml.
+        type: str
+        required: true
