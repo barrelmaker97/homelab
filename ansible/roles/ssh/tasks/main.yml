@@ -1,0 +1,36 @@
+---
+- name: Install OpenSSH server
+  ansible.builtin.apt:
+    name: openssh-server
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create sshd drop-in directory
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+# 00- precedes any later drop-in and the defaults in sshd_config: in OpenSSH
+# the first value encountered for a directive wins.
+- name: Install sshd hardening drop-in
+  ansible.builtin.copy:
+    src: 00-hardening.conf
+    dest: /etc/ssh/sshd_config.d/00-hardening.conf
+    owner: root
+    group: root
+    mode: '0644'
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Reload ssh
+
+- name: Flush handlers to reload ssh before continuing
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure ssh is enabled and started
+  ansible.builtin.systemd:
+    name: ssh
+    enabled: true
+    state: started

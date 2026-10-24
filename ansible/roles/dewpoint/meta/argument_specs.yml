@@ -4,7 +4,8 @@ argument_specs:
     short_description: Install the dewpoint Govee sensor exporter
     description:
       - Installs the dewpoint .deb from GitHub releases when the installed
-        version differs, then configures it through a systemd drop-in.
+        version differs, and runs it as the unprivileged dewpoint user through
+        a hardened systemd drop-in.
     options:
       dewpoint_version:
         description:

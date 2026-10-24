@@ -8,6 +8,16 @@
     update_cache: true
     cache_valid_time: 3600
 
+- name: Create dewpoint system user
+  ansible.builtin.user:
+    name: dewpoint
+    system: true
+    groups:
+      - bluetooth
+    append: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
 - name: Check installed dewpoint version
   ansible.builtin.command: dpkg-query -W -f='${Version}' dewpoint
   register: dewpoint_installed

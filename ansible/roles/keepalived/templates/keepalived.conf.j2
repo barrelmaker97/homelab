@@ -20,6 +20,12 @@ vrrp_instance VI_1 {
     virtual_router_id {{ keepalived_router_id }}
     priority {{ keepalived_priority }}
     advert_int 1
+    unicast_src_ip {{ keepalived_unicast_src_ip }}
+    unicast_peer {
+{% for peer in keepalived_unicast_peers %}
+        {{ peer }}
+{% endfor %}
+    }
     virtual_ipaddress {
         {{ keepalived_vip }}
     }

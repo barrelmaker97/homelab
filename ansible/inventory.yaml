@@ -6,14 +6,19 @@ all:
           ansible_host: "{{ lan_hosts.castor }}"
           keepalived_state: MASTER
           keepalived_priority: 150
+          keepalived_unicast_peers:
+            - "{{ lan_hosts.pollux }}"
         pollux:
           ansible_host: "{{ lan_hosts.pollux }}"
           keepalived_state: BACKUP
           keepalived_priority: 100
+          keepalived_unicast_peers:
+            - "{{ lan_hosts.castor }}"
       vars:
         keepalived_vip: "{{ dns_vip }}"
         keepalived_interface: eth0
         keepalived_router_id: 51
+        keepalived_unicast_src_ip: "{{ ansible_host }}"
         # Installed by the pihole and wireguard roles
         keepalived_track_scripts:
           - name: chk_pihole

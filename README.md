@@ -92,6 +92,7 @@ ansible-playbook dns.yaml --tags pihole
 | `dewpoint.yaml`      | `dns_servers`                | Install the dewpoint Govee sensor exporter                 |
 | `node_exporter.yaml` | `dns_servers`                | Install the Prometheus node exporter                       |
 | `nut.yaml`           | `ups_servers`, `ups_clients` | Run the NUT server on the UPS host, and its secondaries    |
+| `ssh.yaml`           | `dns_servers`                | Harden the OpenSSH server configuration                    |
 | `wireguard.yaml`     | `vpn_servers`                | Run the WireGuard VPN server                               |
 
 `setup.yaml` generates machine configs; it does not apply them or bootstrap

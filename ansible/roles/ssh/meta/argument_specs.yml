@@ -1,0 +1,9 @@
+---
+argument_specs:
+  main:
+    short_description: Harden the OpenSSH server configuration
+    description:
+      - Installs a drop-in under /etc/ssh/sshd_config.d/ disabling root login,
+        password authentication and X11 forwarding, validated with sshd -t
+        before reloading ssh.
+    options: {}

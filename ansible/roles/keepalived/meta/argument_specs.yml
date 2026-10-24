@@ -53,3 +53,15 @@ argument_specs:
             and not collide with another VRRP group on the same network.
         type: int
         required: true
+      keepalived_unicast_src_ip:
+        description:
+          - Source IP address for unicast VRRP advertisements on this host.
+        type: str
+        required: true
+      keepalived_unicast_peers:
+        description:
+          - Peer IP addresses that receive unicast VRRP advertisements instead
+            of broadcasting multicast on the LAN.
+        type: list
+        elements: str
+        required: true
