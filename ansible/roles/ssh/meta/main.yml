@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: Nolan Cooper
+  description: Harden the OpenSSH server configuration.
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions: [all]
+    - name: Ubuntu
+      versions: [all]
+  galaxy_tags: [security, ssh]
+
+dependencies: []

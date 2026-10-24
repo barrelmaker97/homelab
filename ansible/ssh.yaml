@@ -1,0 +1,8 @@
+---
+- name: Harden SSH server
+  hosts: dns_servers
+  become: true
+  gather_facts: false
+  roles:
+    - role: ssh
+      tags: [ssh]

@@ -1,5 +1,17 @@
 [Service]
+User=dewpoint
+Group=bluetooth
 Environment="BIND_PORT={{ dewpoint_bind_port }}"
 {% if dewpoint_address %}
 Environment="ADDRESS={{ dewpoint_address }}"
 {% endif %}
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_BLUETOOTH
