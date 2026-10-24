@@ -17,8 +17,8 @@
 # 00- precedes any later drop-in and the defaults in sshd_config: in OpenSSH
 # the first value encountered for a directive wins.
 - name: Install sshd hardening drop-in
-  ansible.builtin.copy:
-    src: 00-hardening.conf
+  ansible.builtin.template:
+    src: 00-hardening.conf.j2
     dest: /etc/ssh/sshd_config.d/00-hardening.conf
     owner: root
     group: root
