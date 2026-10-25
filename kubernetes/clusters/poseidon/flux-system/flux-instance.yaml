@@ -30,6 +30,18 @@ spec:
   kustomize:
     patches:
       - target:
+          kind: Namespace
+          name: flux-system
+        patch: |
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: flux-system
+            labels:
+              pod-security.kubernetes.io/enforce: restricted
+              pod-security.kubernetes.io/audit: restricted
+              pod-security.kubernetes.io/warn: restricted
+      - target:
           kind: Deployment
           name: "(helm|kustomize|source)-controller"
         patch: |
