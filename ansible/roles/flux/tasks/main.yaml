@@ -24,6 +24,10 @@
       kind: Namespace
       metadata:
         name: flux-system
+        labels:
+          pod-security.kubernetes.io/enforce: restricted
+          pod-security.kubernetes.io/audit: restricted
+          pod-security.kubernetes.io/warn: restricted
 
 # The cluster's own age key, which decrypts only files under kubernetes/ (see
 # .sops.yaml). It is the one secret Flux cannot hold in Git for itself, so it

@@ -71,6 +71,13 @@ resources:
     memory: 1536Mi
 ---
 apiVersion: v1alpha1
+kind: KubeAdmissionControlConfig
+name: PodSecurity
+configuration:
+  defaults:
+    enforce: restricted
+---
+apiVersion: v1alpha1
 kind: KubeControllerManagerConfig
 extraArgs:
   bind-address: 0.0.0.0
