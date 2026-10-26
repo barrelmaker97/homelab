@@ -46,7 +46,7 @@
 
 - name: Install dig for the health check
   ansible.builtin.apt:
-    name: dnsutils
+    name: bind9-dnsutils
     state: present
     update_cache: true
     cache_valid_time: 3600
