@@ -2,7 +2,7 @@
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
-  name: envoy-proxy-config
+  name: poseidon-public
   namespace: envoy-gateway-system
 spec:
   provider:
@@ -43,12 +43,12 @@ spec:
                   app.kubernetes.io/component: proxy
                   app.kubernetes.io/managed-by: envoy-gateway
                   app.kubernetes.io/name: envoy
-                  gateway.envoyproxy.io/owning-gateway-name: poseidon
+                  gateway.envoyproxy.io/owning-gateway-name: poseidon-public
                   gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
               matchLabelKeys:
                 - pod-template-hash
       envoyPDB:
-        name: poseidon-envoy-proxy
+        name: poseidon-public-envoy-proxy
         maxUnavailable: 1
       envoyService:
         annotations:
@@ -60,7 +60,7 @@ spec:
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
-  name: envoy-proxy-internal
+  name: poseidon-internal
   namespace: envoy-gateway-system
 spec:
   provider:

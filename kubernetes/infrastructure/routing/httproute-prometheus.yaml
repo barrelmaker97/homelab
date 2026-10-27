@@ -8,7 +8,7 @@ spec:
   parentRefs:
     - name: poseidon-internal
       namespace: envoy-gateway-system
-      sectionName: https-lan-wildcard
+      sectionName: https-wildcard
   hostnames:
     - prometheus.poseidon.lan
   rules:

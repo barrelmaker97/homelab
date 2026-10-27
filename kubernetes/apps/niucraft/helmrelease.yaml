@@ -35,7 +35,7 @@ spec:
       httpRoute:
         enabled: true
         parentRefs:
-          - name: "poseidon"
+          - name: "poseidon-public"
             namespace: "envoy-gateway-system"
             sectionName: "https-wildcard"
         hostnames:

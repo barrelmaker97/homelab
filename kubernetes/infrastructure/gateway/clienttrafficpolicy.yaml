@@ -15,7 +15,7 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: poseidon-internal
-      sectionName: https-lan-wildcard
+      sectionName: https-wildcard
   tls:
     alpnProtocols:
       - h2
@@ -45,11 +45,11 @@ spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: poseidon
+      name: poseidon-public
       sectionName: https-apex
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: poseidon
+      name: poseidon-public
       sectionName: https-wildcard
   tls:
     alpnProtocols:
