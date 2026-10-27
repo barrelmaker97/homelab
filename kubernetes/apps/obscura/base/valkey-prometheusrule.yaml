@@ -25,7 +25,7 @@ spec:
             namespace: obscura
           annotations:
             summary: >-
-              Valkey obscura/valkey is unavailable
+              Valkey {{ $labels.namespace }}/valkey is unavailable
             description: >-
               The exporter cannot reach Valkey, or the pod is not running.
               Realtime delivery and push notifications are stopped.
@@ -49,7 +49,7 @@ spec:
             namespace: obscura
           annotations:
             summary: >-
-              Valkey obscura/valkey is failing to write its AOF
+              Valkey {{ $labels.namespace }}/valkey is failing to write its AOF
             description: >-
               The last AOF write or rewrite failed, so a restart would lose
               recent queued jobs and idempotency keys.
@@ -73,7 +73,7 @@ spec:
             namespace: obscura
           annotations:
             summary: >-
-              Valkey obscura/valkey is above 80% of maxmemory
+              Valkey {{ $labels.namespace }}/valkey is above 80% of maxmemory
             description: >-
               maxmemory-policy is noeviction, so writes will fail once
               memory reaches maxmemory.

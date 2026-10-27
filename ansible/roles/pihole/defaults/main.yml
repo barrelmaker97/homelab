@@ -7,7 +7,7 @@ pihole_config:
        | map(attribute='value')
        | zip(lan_hosts | map('regex_replace', '$', '.' ~ local_domain))
        | map('join', ' ') | to_json }}
-  dns.cnameRecords: '["prometheus.soteria.lan,soteria.lan", "alertmanager.poseidon.lan,poseidon.lan", "prometheus.poseidon.lan,poseidon.lan", "longhorn.poseidon.lan,poseidon.lan", "grafana.soteria.lan,soteria.lan"]'
+  dns.cnameRecords: '["alertmanager.poseidon.lan,poseidon.lan", "prometheus.poseidon.lan,poseidon.lan", "longhorn.poseidon.lan,poseidon.lan"]'
   dns.domainNeeded: "true"
   dns.interface: "eth0"
   dns.domain.name: "lan"

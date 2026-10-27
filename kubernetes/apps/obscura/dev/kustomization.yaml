@@ -6,8 +6,6 @@ resources:
   - ../base
   - secret-rustfs.sops.yaml
   - secret-server.sops.yaml
-  - postgres-prometheusrule.yaml
-  - valkey-prometheusrule.yaml
   - secret-obscura-valkey.sops.yaml
 patches:
   - path: helmrelease.yaml
@@ -18,3 +16,86 @@ patches:
     target:
       kind: Cluster
       name: obscura-postgres
+  # Dev is a staging environment: availability alerts page at warning rather
+  # than critical.
+  - target:
+      kind: PrometheusRule
+      name: obscura-postgres
+    patch: |
+      - op: replace
+        path: /spec/groups/0/rules/0/labels/severity
+        value: warning
+      - op: replace
+        path: /spec/groups/0/rules/1/labels/severity
+        value: warning
+      - op: replace
+        path: /spec/groups/0/rules/2/labels/severity
+        value: warning
+      - op: replace
+        path: /spec/groups/0/rules/4/labels/severity
+        value: warning
+replacements:
+  # Rewrite the base PrometheusRules' namespace and job references from
+  # obscura to obscura-dev.
+  - source:
+      kind: Namespace
+      name: obscura
+      fieldPath: metadata.name
+    targets:
+      - select:
+          kind: PrometheusRule
+        fieldPaths:
+          - spec.groups.*.rules.*.labels.namespace
+      - select:
+          kind: PrometheusRule
+          name: obscura-postgres
+        fieldPaths:
+          - spec.groups.*.rules.*.labels.job
+        options:
+          delimiter: /
+          index: 0
+      - select:
+          kind: PrometheusRule
+          name: obscura-valkey
+        fieldPaths:
+          - spec.groups.*.rules.*.expr
+        options:
+          delimiter: '"'
+          index: 1
+      - select:
+          kind: PrometheusRule
+          name: obscura-valkey
+        fieldPaths:
+          - spec.groups.1.rules.*.expr
+        options:
+          delimiter: '"'
+          index: 5
+  - source:
+      kind: PrometheusRule
+      name: obscura-postgres
+      fieldPath: spec.groups.0.rules.0.labels.job
+    targets:
+      - select:
+          kind: PrometheusRule
+          name: obscura-postgres
+        fieldPaths:
+          - spec.groups.*.rules.*.expr
+        options:
+          delimiter: '"'
+          index: 1
+      - select:
+          kind: PrometheusRule
+          name: obscura-postgres
+        fieldPaths:
+          - spec.groups.0.rules.2.expr
+        options:
+          delimiter: '"'
+          index: 3
+      - select:
+          kind: PrometheusRule
+          name: obscura-postgres
+        fieldPaths:
+          - spec.groups.0.rules.4.expr
+        options:
+          delimiter: '"'
+          index: 5

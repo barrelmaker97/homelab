@@ -7,7 +7,9 @@ resources:
   - limitrange.yaml
   - postgres-cluster.yaml
   - postgres-podmonitor.yaml
+  - postgres-prometheusrule.yaml
   - helmrelease.yaml
   - valkey-helmrelease.yaml
+  - valkey-prometheusrule.yaml
 components:
   - ../../../components/helmrelease
