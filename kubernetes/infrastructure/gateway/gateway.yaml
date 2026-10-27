@@ -19,7 +19,7 @@ spec:
       port: 80
       allowedRoutes:
         namespaces:
-          from: All
+          from: Same
     - name: https-apex
       protocol: HTTPS
       port: 443
@@ -63,7 +63,7 @@ spec:
       port: 80
       allowedRoutes:
         namespaces:
-          from: All
+          from: Same
     - name: https-lan-wildcard
       protocol: HTTPS
       port: 443

@@ -9,6 +9,13 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: longhorn-httproute
+  authorization:
+    defaultAction: Deny
+    rules:
+      - action: Allow
+        principal:
+          clientCIDRs:
+            - 192.168.15.0/24
   basicAuth:
     users:
       name: internal-ui-basic-auth
@@ -23,6 +30,13 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: kube-prometheus-stack-prometheus
+  authorization:
+    defaultAction: Deny
+    rules:
+      - action: Allow
+        principal:
+          clientCIDRs:
+            - 192.168.15.0/24
   basicAuth:
     users:
       name: internal-ui-basic-auth
@@ -37,6 +51,13 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: kube-prometheus-stack-alertmanager
+  authorization:
+    defaultAction: Deny
+    rules:
+      - action: Allow
+        principal:
+          clientCIDRs:
+            - 192.168.15.0/24
   basicAuth:
     users:
       name: internal-ui-basic-auth
