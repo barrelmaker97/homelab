@@ -6,7 +6,7 @@ metadata:
   namespace: monitoring
 spec:
   parentRefs:
-    - name: poseidon
+    - name: poseidon-internal
       namespace: envoy-gateway-system
       sectionName: https-lan-wildcard
   hostnames:

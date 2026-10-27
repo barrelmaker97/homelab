@@ -309,17 +309,18 @@ etcd endpoints) keep their own copies.
 
 ### Cluster
 
-| Name         | Address                     | Hostname           |
-|--------------|-----------------------------|--------------------|
-| Virtual IP   | 192.168.15.40               | kube.poseidon.lan  |
-| Node 1       | 192.168.15.41               | node1-poseidon.lan |
-| Node 2       | 192.168.15.42               | node2-poseidon.lan |
-| Node 3       | 192.168.15.43               | node3-poseidon.lan |
-| MetalLB pool | 192.168.15.60-192.168.15.69 |                    |
-| Gateway      | 192.168.15.60               | poseidon.lan       |
-| Valheim      | 192.168.15.61               |                    |
-| Niucraft     | 192.168.15.62               |                    |
-| Loch         | 192.168.15.63               |                    |
+| Name             | Address                     | Hostname           |
+|------------------|-----------------------------|--------------------|
+| Virtual IP       | 192.168.15.40               | kube.poseidon.lan  |
+| Node 1           | 192.168.15.41               | node1-poseidon.lan |
+| Node 2           | 192.168.15.42               | node2-poseidon.lan |
+| Node 3           | 192.168.15.43               | node3-poseidon.lan |
+| MetalLB pool     | 192.168.15.60-192.168.15.69 |                    |
+| Public gateway   | 192.168.15.60               |                    |
+| Valheim          | 192.168.15.61               |                    |
+| Niucraft         | 192.168.15.62               |                    |
+| Loch             | 192.168.15.63               |                    |
+| Internal gateway | 192.168.15.64               | poseidon.lan       |
 
 ### Hosts
 

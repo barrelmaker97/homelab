@@ -8,6 +8,8 @@ spec:
   parentRefs:
     - name: poseidon
       sectionName: http
+    - name: poseidon-internal
+      sectionName: http
   rules:
     - filters:
         - type: RequestRedirect

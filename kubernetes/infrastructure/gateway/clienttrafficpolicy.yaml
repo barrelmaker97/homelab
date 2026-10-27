@@ -1,23 +1,21 @@
 ---
-# Re-enable HTTP/2 ALPN on the shared Gateway. Envoy Gateway defaults the
-# listener ALPN to HTTP/1.1 when two HTTPS listeners present certificates with
-# overlapping SANs (our apex `barrelmaker.dev` and `*.barrelmaker.dev` are
-# covered by the same Let's Encrypt cert), to prevent HTTP/2 connection
-# coalescing routing requests to the wrong listener. Setting ALPN explicitly
-# acknowledges the overlap and restores h2 multiplexing.
+# TLS settings for the internal Gateway. HSTS is omitted here: it would stop
+# browsers on devices that do not trust the internal CA from reaching the
+# internal UIs at all.
 #
 # X25519MLKEM768 is a post-quantum hybrid key exchange, preferred where the
 # client supports it; the classic curves after it are the fallback.
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: ClientTrafficPolicy
 metadata:
-  name: poseidon-alpn
+  name: poseidon-internal
   namespace: envoy-gateway-system
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: poseidon
+      name: poseidon-internal
+      sectionName: https-lan-wildcard
   tls:
     alpnProtocols:
       - h2
@@ -26,13 +24,18 @@ spec:
       - X25519MLKEM768
       - X25519
       - P-256
+  headers:
+    lateResponseHeaders:
+      set:
+        - name: Referrer-Policy
+          value: same-origin
+        - name: X-Content-Type-Options
+          value: nosniff
 ---
-# The public listeners: the same TLS settings, plus the security headers
-# every public response carries. A policy targeting a listener replaces the
-# Gateway-wide one for that listener rather than merging with it, so the TLS
-# settings above are repeated here. Scoped to the public listeners only: HSTS
-# on the LAN listener would stop browsers on devices that do not trust the
-# internal CA from reaching the internal UIs at all.
+# Re-enable HTTP/2 ALPN on the public Gateway (Envoy Gateway defaults listener
+# ALPN to HTTP/1.1 when two HTTPS listeners present certificates with
+# overlapping SANs, as `barrelmaker.dev` and `*.barrelmaker.dev` do) and add
+# the security headers every public response carries.
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: ClientTrafficPolicy
 metadata:

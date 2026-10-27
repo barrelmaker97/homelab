@@ -12,3 +12,6 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: poseidon
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: poseidon-internal
