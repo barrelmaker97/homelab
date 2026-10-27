@@ -26,7 +26,7 @@ spec:
             namespace: obscura
           annotations:
             summary: >-
-              CloudNativePG cluster obscura/obscura-postgres
+              CloudNativePG cluster {{ $labels.job }}
               has unavailable instances
             description: >-
               Fewer than 3 PostgreSQL

@@ -6,8 +6,6 @@ resources:
   - ../base
   - secret-rustfs.sops.yaml
   - secret-server.sops.yaml
-  - postgres-prometheusrule.yaml
-  - valkey-prometheusrule.yaml
   - secret-obscura-valkey.sops.yaml
 patches:
   - path: helmrelease.yaml
