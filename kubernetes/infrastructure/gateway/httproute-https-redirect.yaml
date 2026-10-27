@@ -6,7 +6,9 @@ metadata:
   namespace: envoy-gateway-system
 spec:
   parentRefs:
-    - name: poseidon
+    - name: poseidon-public
+      sectionName: http
+    - name: poseidon-internal
       sectionName: http
   rules:
     - filters:

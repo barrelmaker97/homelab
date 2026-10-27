@@ -46,6 +46,7 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/component: proxy
+              gateway.envoyproxy.io/owning-gateway-name: poseidon-internal
       ports:
         - port: 8000
           protocol: TCP

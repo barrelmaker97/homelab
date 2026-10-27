@@ -15,7 +15,7 @@ lan_hosts:
   node2-poseidon: 192.168.15.42
   node3-poseidon: 192.168.15.43
   demeter: 192.168.15.50
-  poseidon: 192.168.15.60
+  poseidon: 192.168.15.64
   castor: 192.168.15.70
 
 # Held by whichever DNS server keepalived elects; it has no name of its own.

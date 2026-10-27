@@ -1,29 +1,25 @@
 ---
+# Public gateway (192.168.15.60): the router forwards WAN ports 80 and 443
+# here for barrelmaker.dev and *.barrelmaker.dev.
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: poseidon
+  name: poseidon-public
   namespace: envoy-gateway-system
 spec:
   gatewayClassName: envoy
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: poseidon-public
   listeners:
     - name: http
       protocol: HTTP
       port: 80
       allowedRoutes:
         namespaces:
-          from: All
-    - name: https-lan-wildcard
-      protocol: HTTPS
-      port: 443
-      hostname: "*.poseidon.lan"
-      tls:
-        mode: Terminate
-        certificateRefs:
-          - name: wildcard-lan-tls
-      allowedRoutes:
-        namespaces:
-          from: All
+          from: Same
     - name: https-apex
       protocol: HTTPS
       port: 443
@@ -43,6 +39,39 @@ spec:
         mode: Terminate
         certificateRefs:
           - name: wildcard-public-tls
+      allowedRoutes:
+        namespaces:
+          from: All
+---
+# Internal gateway (192.168.15.64, poseidon.lan): LAN-only, never forwarded
+# from the router, serving *.poseidon.lan.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: poseidon-internal
+  namespace: envoy-gateway-system
+spec:
+  gatewayClassName: envoy
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: poseidon-internal
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https-wildcard
+      protocol: HTTPS
+      port: 443
+      hostname: "*.poseidon.lan"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: wildcard-lan-tls
       allowedRoutes:
         namespaces:
           from: All

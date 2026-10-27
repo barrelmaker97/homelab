@@ -2,7 +2,7 @@
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
-  name: envoy-proxy-config
+  name: poseidon-public
   namespace: envoy-gateway-system
 spec:
   provider:
@@ -43,16 +43,74 @@ spec:
                   app.kubernetes.io/component: proxy
                   app.kubernetes.io/managed-by: envoy-gateway
                   app.kubernetes.io/name: envoy
-                  gateway.envoyproxy.io/owning-gateway-name: poseidon
+                  gateway.envoyproxy.io/owning-gateway-name: poseidon-public
                   gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
               matchLabelKeys:
                 - pod-template-hash
       envoyPDB:
-        name: poseidon-envoy-proxy
+        name: poseidon-public-envoy-proxy
         maxUnavailable: 1
       envoyService:
         annotations:
           metallb.io/loadBalancerIPs: 192.168.15.60
+  telemetry:
+    metrics:
+      prometheus: {}
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: poseidon-internal
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyDeployment:
+        replicas: 2
+        container:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+        # The proxy's other container; Envoy Gateway requests only 32Mi for it.
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              template:
+                spec:
+                  containers:
+                    - name: shutdown-manager
+                      resources:
+                        requests:
+                          cpu: 10m
+                          memory: 128Mi
+                        limits:
+                          memory: 256Mi
+        pod:
+          topologySpreadConstraints:
+            - maxSkew: 1
+              minDomains: 2
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: proxy
+                  app.kubernetes.io/managed-by: envoy-gateway
+                  app.kubernetes.io/name: envoy
+                  gateway.envoyproxy.io/owning-gateway-name: poseidon-internal
+                  gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+              matchLabelKeys:
+                - pod-template-hash
+      envoyPDB:
+        name: poseidon-internal-envoy-proxy
+        maxUnavailable: 1
+      envoyService:
+        annotations:
+          metallb.io/loadBalancerIPs: 192.168.15.64
   telemetry:
     metrics:
       prometheus: {}
