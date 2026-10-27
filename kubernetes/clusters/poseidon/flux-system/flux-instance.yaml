@@ -17,7 +17,7 @@ metadata:
     kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   distribution:
-    version: "2.9.6"
+    version: "2.10.0"
     registry: ghcr.io/fluxcd
   sync:
     kind: GitRepository
