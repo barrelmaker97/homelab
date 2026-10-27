@@ -19,9 +19,9 @@ spec:
     resources:
       requests:
         cpu: 10m
-        memory: 64Mi
+        memory: 96Mi
       limits:
-        memory: 128Mi
+        memory: 192Mi
     webhook:
       resources:
         requests:
@@ -33,9 +33,9 @@ spec:
       resources:
         requests:
           cpu: 10m
-          memory: 64Mi
+          memory: 96Mi
         limits:
-          memory: 128Mi
+          memory: 192Mi
     prometheus:
       enabled: true
       servicemonitor:

@@ -28,7 +28,6 @@ spec:
           cpu: 20m
           memory: 20Mi
         limits:
-          cpu: 60m
           memory: 60Mi
     persistence:
       storageClassName: longhorn-protected
@@ -44,4 +43,4 @@ spec:
         cpu: 200m
         memory: 3000Mi
       limits:
-        memory: 3100Mi
+        memory: 3584Mi

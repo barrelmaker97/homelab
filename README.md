@@ -118,7 +118,7 @@ Flux manages itself: upgrade Flux or its operator by editing
 | `kubernetes/clusters/poseidon`      | Flux itself (`flux-system/`), chart sources, and the infrastructure/app Flux Kustomizations |
 | `kubernetes/infrastructure/<layer>` | Platform layers, ordered bottom up by `dependsOn` in `infrastructure.yaml`                  |
 | `kubernetes/apps/<app>`             | Application manifests, including HelmReleases, routes and owned resources                 |
-| `kubernetes/apps/barrelmaker`       | The namespace most apps share, with its quota and limit range                               |
+| `kubernetes/apps/barrelmaker`       | The namespace most apps share                                                               |
 | `kubernetes/apps/obscura`           | Obscura's shared `base` and `prod`/`dev` overlays                                           |
 | `kubernetes/components/helmrelease` | Shared HelmRelease reconciliation settings                                                  |
 

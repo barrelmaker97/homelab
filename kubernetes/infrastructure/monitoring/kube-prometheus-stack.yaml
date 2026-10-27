@@ -43,9 +43,9 @@ spec:
       resources:
         requests:
           cpu: 10m
-          memory: 64Mi
+          memory: 96Mi
         limits:
-          memory: 128Mi
+          memory: 192Mi
       prometheusConfigReloader:
         resources:
           requests:
@@ -57,7 +57,7 @@ spec:
       resources:
         requests:
           cpu: 10m
-          memory: 64Mi
+          memory: 96Mi
         limits:
           memory: 256Mi
     prometheus-node-exporter:
@@ -95,7 +95,7 @@ spec:
       resources:
         requests:
           cpu: 25m
-          memory: 512Mi
+          memory: 768Mi
         limits:
           memory: 1Gi
       sidecar:
