@@ -114,7 +114,7 @@ for config in "$tmp"/*.yaml; do
   node=$(basename "$config" .yaml)
   echo "== $node"
   talosctl -n "$node.lan" apply-config --dry-run --file "$config" 2>&1 | sed -E \
-    -e '/-----BEGIN/,/-----END/{/-----(BEGIN|END)/!s/^([-+ ]?[[:space:]]*).*/\1<redacted>/}' \
+    -e '/-----BEGIN/,/-----END/{/-----(BEGIN|END)/!s/^([-+ ]?[[:space:]]*).*/\1<redacted>/;}' \
     -e 's/^([-+ ]?[[:space:]]*[A-Za-z]*([Kk]ey|crt|[Cc]ert|[Ss]ecret|[Tt]oken|[Pp]assword|clusterID|id):)[[:space:]]+[^|>[:space:]].*/\1 <redacted>/' \
     -e 's/^([-+ ]?[[:space:]]*)[A-Za-z0-9+\/=._-]{32,}$/\1<redacted>/' \
     -e 's/(MONITOR [^ ]+ [^ ]+ [^ ]+) [^ ]+/\1 <redacted>/'

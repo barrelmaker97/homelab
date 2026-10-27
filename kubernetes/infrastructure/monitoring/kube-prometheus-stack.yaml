@@ -143,6 +143,8 @@ spec:
             lokiSearch:
               datasourceUid: "loki"
       grafana.ini:
+        server:
+          domain: grafana.barrelmaker.dev
         auth:
           login_cookie_name: __Host-grafana_session
         security:

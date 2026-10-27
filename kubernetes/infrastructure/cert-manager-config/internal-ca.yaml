@@ -48,3 +48,6 @@ spec:
   target:
     configMap:
       key: ca-certificates.crt
+    namespaceSelector:
+      matchLabels:
+        internal-trust: enabled

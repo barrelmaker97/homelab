@@ -12,6 +12,9 @@ pihole_config:
   dns.interface: "eth0"
   dns.domain.name: "lan"
   misc.dnsmasq_lines: '["local-ttl=300"]'
+  ntp.ipv4.active: "false"
+  ntp.ipv6.active: "false"
+  ntp.sync.active: "false"
   webserver.port: "80o,443os,[::]:80o,[::]:443os"
   webserver.interface.boxed: "false"
 
