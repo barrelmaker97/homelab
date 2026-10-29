@@ -20,6 +20,7 @@ resources:
   - prometheusrule-dewpoint.yaml
   - podmonitor-flux.yaml
   - prometheusrule-flux.yaml
+  - prometheusrule-prometheus-storage.yaml
 components:
   - ../../components/helmrelease
 

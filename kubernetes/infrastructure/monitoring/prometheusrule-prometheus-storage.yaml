@@ -1,0 +1,21 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: prometheus-storage
+  namespace: monitoring
+spec:
+  groups:
+    - name: prometheus-storage
+      rules:
+        - alert: PrometheusSizeRetentionActive
+          expr: >-
+            increase(prometheus_tsdb_size_retentions_total[1h]) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: >-
+              Prometheus is deleting data early to stay under retentionSize
+            description: >-
+              History is now shorter than the 30d retention. Expand the volume
+              and raise retentionSize, or cut ingest.
