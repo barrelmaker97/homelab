@@ -11,7 +11,7 @@ spec:
       metricRelabelings:
         - action: keep
           regex: >-
-            envoy_cluster_upstream_rq_(xx|total)|envoy_cluster_upstream_rq_time_(bucket|sum|count)|envoy_cluster_upstream_cx_none_healthy|envoy_cluster_membership_(healthy|total)|envoy_http_downstream_rq_(xx|total)|envoy_server_live
+            envoy_cluster_membership_(healthy|degraded|excluded|total)|envoy_cluster_upstream_rq_(xx|total)|envoy_cluster_upstream_rq_time_(bucket|sum|count)|envoy_cluster_upstream_cx_(active|total|rx_bytes_total|tx_bytes_total|none_healthy)|envoy_cluster_outlier_detection_ejections_active|envoy_http_downstream_rq_(xx|total)|envoy_http_downstream_rq_time_bucket|envoy_http_downstream_cx_(total|rx_bytes_total|tx_bytes_total)|envoy_tcp_downstream_cx_(total|rx_bytes_total|tx_bytes_total)|envoy_listener_downstream_cx_active|envoy_listener_ssl_certificate_expiration_unix_time_seconds|envoy_server_(live|uptime|memory_allocated|memory_heap_size)
           sourceLabels:
             - __name__
   selector:

@@ -14,8 +14,6 @@ resources:
   - secret-discord-webhook-url.sops.yaml
   - alertmanagerconfig.yaml
   - prometheusrule-longhorn-snapshots.yaml
-  - prometheusrule-longhorn.yaml
-  - prometheusrule-gateway.yaml
   - prometheusrule-dewpoint.yaml
   - podmonitor-flux.yaml
   - prometheusrule-flux.yaml
