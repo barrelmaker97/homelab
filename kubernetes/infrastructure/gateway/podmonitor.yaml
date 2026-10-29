@@ -8,6 +8,12 @@ spec:
   podMetricsEndpoints:
     - path: /stats/prometheus
       port: metrics
+      metricRelabelings:
+        - action: keep
+          regex: >-
+            envoy_cluster_upstream_rq_(xx|total)|envoy_cluster_upstream_rq_time_(bucket|sum|count)|envoy_cluster_upstream_cx_none_healthy|envoy_cluster_membership_(healthy|total)|envoy_http_downstream_rq_(xx|total)|envoy_server_live
+          sourceLabels:
+            - __name__
   selector:
     matchLabels:
       app.kubernetes.io/component: proxy

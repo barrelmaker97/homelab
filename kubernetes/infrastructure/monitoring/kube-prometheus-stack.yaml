@@ -24,6 +24,41 @@ spec:
   values:
     crds:
       enabled: false
+    # The drop rule is the chart default, which setting this list replaces.
+    kubeApiServer:
+      serviceMonitor:
+        metricRelabelings:
+          - action: drop
+            regex: (etcd_request|apiserver_request_slo|apiserver_request_sli|apiserver_request)_duration_seconds_bucket;(0\.15|0\.2|0\.3|0\.35|0\.4|0\.45|0\.6|0\.7|0\.8|0\.9|1\.25|1\.5|1\.75|2|3|3\.5|4|4\.5|6|7|8|9|15|20|40|45|50)(\.0)?
+            sourceLabels:
+              - __name__
+              - le
+          - action: keep
+            regex: >-
+              aggregator_unavailable_apiservice(_total)?|apiserver_client_certificate_expiration_seconds_(bucket|count)|apiserver_request_sli_duration_seconds_(bucket|count)|apiserver_request_(total|terminations_total)|apiserver_current_inflight_requests|apiserver_resource_objects|apiserver_storage_size_bytes|workqueue_(adds_total|depth|queue_duration_seconds_bucket)|rest_client_(requests_total|request_duration_seconds_bucket)|process_(cpu_seconds_total|resident_memory_bytes|start_time_seconds)|go_goroutines|kubernetes_build_info
+            sourceLabels:
+              - __name__
+    kubelet:
+      serviceMonitor:
+        cAdvisorInterval: 30s
+        # The drop rules are carried over from the chart default, which setting
+        # this list replaces.
+        cAdvisorMetricRelabelings:
+          - action: keep
+            regex: >-
+              container_cpu_usage_seconds_total|container_cpu_cfs_(throttled_)?periods_total|container_memory_(working_set_bytes|rss|cache|swap)|container_network_(receive|transmit)_(bytes|packets|packets_dropped)_total|container_fs_(reads|writes)(_bytes)?_total
+            sourceLabels:
+              - __name__
+          - action: drop
+            regex: container_network_.*;(cali|cilium|cni|lxc|nodelocaldns|tunl).*
+            sourceLabels:
+              - __name__
+              - interface
+          - action: drop
+            regex: .+;
+            sourceLabels:
+              - id
+              - pod
     kubeEtcd:
       enabled: true
       # Literal node IPs: Kubernetes Endpoints reject hostnames.
@@ -92,6 +127,12 @@ spec:
     grafana:
       admin:
         existingSecret: grafana-admin-credentials
+      serviceMonitor:
+        metricRelabelings:
+          - action: drop
+            regex: grafana_(apiserver_.*|storage_server_.*|http_response_size_bytes_.*|feature_toggles_info)
+            sourceLabels:
+              - __name__
       resources:
         requests:
           cpu: 25m
@@ -175,6 +216,7 @@ spec:
       prometheusSpec:
         enableRemoteWriteReceiver: true
         retention: 30d
+        retentionSize: 27GB
         resources:
           requests:
             cpu: 250m
