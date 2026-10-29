@@ -175,6 +175,7 @@ spec:
       prometheusSpec:
         enableRemoteWriteReceiver: true
         retention: 30d
+        retentionSize: 42GB
         resources:
           requests:
             cpu: 250m
@@ -196,4 +197,4 @@ spec:
                 - ReadWriteOnce
               resources:
                 requests:
-                  storage: 30Gi
+                  storage: 50Gi
