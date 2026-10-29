@@ -9,4 +9,5 @@ resources:
   - clienttrafficpolicy.yaml
   - backendtrafficpolicy.yaml
   - podmonitor.yaml
+  - servicemonitor-envoy-gateway.yaml
   - httproute-https-redirect.yaml
