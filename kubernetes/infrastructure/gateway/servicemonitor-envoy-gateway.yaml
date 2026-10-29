@@ -1,0 +1,15 @@
+---
+# The gateway-helm chart has no ServiceMonitor option. This lives here rather
+# than in envoy-gateway, which does not depend on monitoring-prereq's CRDs.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: envoy-gateway
+  namespace: envoy-gateway-system
+spec:
+  endpoints:
+    - port: metrics
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gateway-helm
+      control-plane: envoy-gateway

@@ -1,0 +1,62 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: certificates
+  namespace: monitoring
+spec:
+  groups:
+    - name: certificates
+      rules:
+        - alert: CertificateNotReady
+          expr: >-
+            certmanager_certificate_ready_status{condition="True"} == 0
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: >-
+              Certificate {{ $labels.exported_namespace }}/{{ $labels.name }} is not ready
+            description: >-
+              cert-manager cannot issue or renew it. See
+              kubectl describe certificate -n {{ $labels.exported_namespace }} {{ $labels.name }}.
+
+        - alert: CertificateRenewalOverdue
+          expr: >-
+            time() - certmanager_certificate_renewal_timestamp_seconds > 24 * 3600
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: >-
+              Certificate {{ $labels.exported_namespace }}/{{ $labels.name }} is overdue for renewal
+            description: >-
+              cert-manager was due to renew it {{ $value | humanizeDuration }}
+              ago and has not.
+
+        - alert: CertificateExpiringSoon
+          expr: >-
+            certmanager_certificate_expiration_timestamp_seconds - time() < 7 * 86400
+          for: 1h
+          labels:
+            severity: critical
+          annotations:
+            summary: >-
+              Certificate {{ $labels.exported_namespace }}/{{ $labels.name }} expires in
+              {{ $value | humanizeDuration }}
+
+        # Catches the gateway still serving an old certificate after
+        # cert-manager has renewed the Secret.
+        - alert: GatewayServedCertificateExpiringSoon
+          expr: >-
+            min by (envoy_tls_certificate) (envoy_listener_ssl_certificate_expiration_unix_time_seconds) - time() < 14 * 86400
+          for: 1h
+          labels:
+            severity: critical
+          annotations:
+            summary: >-
+              The gateway's served certificate {{ $labels.envoy_tls_certificate }} expires in
+              {{ $value | humanizeDuration }}
+            description: >-
+              Every certificate renews 30 days before it expires, so
+              Envoy is serving a stale copy or cert-manager renewal is failing.

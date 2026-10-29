@@ -14,6 +14,9 @@ resources:
   - secret-discord-webhook-url.sops.yaml
   - alertmanagerconfig.yaml
   - prometheusrule-longhorn-snapshots.yaml
+  - prometheusrule-longhorn.yaml
+  - prometheusrule-gateway.yaml
+  - prometheusrule-certificates.yaml
   - prometheusrule-dewpoint.yaml
   - podmonitor-flux.yaml
   - prometheusrule-flux.yaml
@@ -30,6 +33,9 @@ configMapGenerator:
       - dashboards/homelab-nodes.json
       - dashboards/openwrt.json
       - dashboards/dewpoint.json
+      - dashboards/envoy-proxy-global.json
+      - dashboards/envoy-clusters.json
+      - dashboards/envoy-gateway-global.json
     options:
       disableNameSuffixHash: true
       labels:

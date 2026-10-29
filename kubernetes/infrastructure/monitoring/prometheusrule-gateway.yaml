@@ -1,0 +1,36 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gateway
+  namespace: monitoring
+spec:
+  groups:
+    - name: gateway
+      rules:
+        - alert: GatewayRouteNoHealthyBackends
+          expr: >-
+            max by (envoy_cluster_name) (envoy_cluster_membership_healthy{envoy_cluster_name=~"httproute/.*"}) == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $labels.envoy_cluster_name }} has no healthy backends"
+            description: >-
+              Envoy has no ready endpoints for this route, so every request to
+              it gets a 503.
+
+        - alert: GatewayRouteHighErrorRate
+          expr: >-
+            sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_rq_xx{envoy_response_code_class="5", envoy_cluster_name=~"httproute/.*"}[15m]))
+            / sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_rq_total{envoy_cluster_name=~"httproute/.*"}[15m]))
+            > 0.05
+            and sum by (envoy_cluster_name) (increase(envoy_cluster_upstream_rq_xx{envoy_response_code_class="5", envoy_cluster_name=~"httproute/.*"}[15m])) > 10
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.envoy_cluster_name }} is returning 5xx errors"
+            description: >-
+              {{ $value | humanizePercentage }} of requests over the last 15
+              minutes returned a 5xx.
