@@ -93,8 +93,8 @@
       enabled: false,
     },
     {
-      description: 'Without this, the newest patch hides behind the disabled minor and never arrives',
-      matchDepNames: ['kubectl'],
+      description: 'Without this, the newest patch hides behind a disabled or blocked minor and never arrives',
+      matchDepNames: ['kubectl', 'python'],
       separateMinorPatch: true,
     },
     {
