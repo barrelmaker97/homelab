@@ -14,6 +14,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   GITHUB_TOKEN: ${{ github.token }}
   # mise-action installs only this job's tools; tasks must not install the rest.
@@ -28,8 +32,9 @@ env:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - uses: jdx/mise-action@v5.2.3
         with:
           version: 2026.10.20
@@ -44,8 +49,9 @@ jobs:
   # flux-local.
   render:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - uses: jdx/mise-action@v5.2.3
         with:
           version: 2026.10.20
@@ -61,11 +67,12 @@ jobs:
   diff:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
       - uses: jdx/mise-action@v5.2.3
