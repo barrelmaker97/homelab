@@ -13,7 +13,7 @@ spec:
             (
               max(
                 redis_up{
-                  namespace="obscura",
+                  namespace="${app_namespace}",
                   job="valkey-metrics"
                 }
               )
@@ -22,7 +22,7 @@ spec:
           for: 2m
           labels:
             severity: warning
-            namespace: obscura
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               Valkey {{ $labels.namespace }}/valkey is unavailable
@@ -35,18 +35,18 @@ spec:
         - alert: ValkeyPersistenceFailing
           expr: >-
             redis_aof_last_write_status{
-              namespace="obscura",
+              namespace="${app_namespace}",
               job="valkey-metrics"
             } < 1
             or
             redis_aof_last_bgrewrite_status{
-              namespace="obscura",
+              namespace="${app_namespace}",
               job="valkey-metrics"
             } < 1
           for: 2m
           labels:
             severity: warning
-            namespace: obscura
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               Valkey {{ $labels.namespace }}/valkey is failing to write its AOF
@@ -57,20 +57,20 @@ spec:
         - alert: ValkeyMemoryHigh
           expr: >-
             redis_memory_used_bytes{
-              namespace="obscura",
+              namespace="${app_namespace}",
               job="valkey-metrics"
             }
             /
             (
               redis_memory_max_bytes{
-                namespace="obscura",
+                namespace="${app_namespace}",
                 job="valkey-metrics"
               } > 0
             ) > 0.8
           for: 5m
           labels:
             severity: warning
-            namespace: obscura
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               Valkey {{ $labels.namespace }}/valkey is above 80% of maxmemory

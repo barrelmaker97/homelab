@@ -120,6 +120,10 @@ spec:
     - name: cloudnative-pg
     - name: longhorn-config
     - name: gateway
+  postBuild:
+    substitute:
+      app_namespace: obscura
+      availability_severity: critical
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
@@ -134,3 +138,7 @@ spec:
     - name: cloudnative-pg
     - name: longhorn-config
     - name: gateway
+  postBuild:
+    substitute:
+      app_namespace: obscura-dev
+      availability_severity: warning
