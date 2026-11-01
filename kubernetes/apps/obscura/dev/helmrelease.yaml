@@ -7,7 +7,7 @@ spec:
   chart:
     spec:
       chart: obscura
-      version: "0.16.2"
+      version: "1.0.0"
       sourceRef:
         kind: HelmRepository
         name: barrelmaker
