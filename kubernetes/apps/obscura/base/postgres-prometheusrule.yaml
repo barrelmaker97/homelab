@@ -13,17 +13,17 @@ spec:
             (
               count(
                 up{
-                  job="obscura/obscura-postgres"
+                  job="${app_namespace}/obscura-postgres"
                 } == 1
               )
               or vector(0)
             ) < 3
           for: 2m
           labels:
-            severity: critical
+            severity: ${availability_severity}
             cnpg_cluster: obscura-postgres
-            job: obscura/obscura-postgres
-            namespace: obscura
+            job: ${app_namespace}/obscura-postgres
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               CloudNativePG cluster {{ $labels.job }}
@@ -35,14 +35,14 @@ spec:
         - alert: CloudNativePGPostgresDown
           expr: >-
             cnpg_collector_up{
-              job="obscura/obscura-postgres"
+              job="${app_namespace}/obscura-postgres"
             } == 0
           for: 1m
           labels:
-            severity: critical
+            severity: ${availability_severity}
             cnpg_cluster: obscura-postgres
-            job: obscura/obscura-postgres
-            namespace: obscura
+            job: ${app_namespace}/obscura-postgres
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               PostgreSQL is unavailable on {{ $labels.pod }}
@@ -53,18 +53,18 @@ spec:
         - alert: CloudNativePGReplicaNotStreaming
           expr: >-
             cnpg_pg_replication_in_recovery{
-              job="obscura/obscura-postgres"
+              job="${app_namespace}/obscura-postgres"
             }
             >
             cnpg_pg_replication_is_wal_receiver_up{
-              job="obscura/obscura-postgres"
+              job="${app_namespace}/obscura-postgres"
             }
           for: 2m
           labels:
-            severity: critical
+            severity: ${availability_severity}
             cnpg_cluster: obscura-postgres
-            job: obscura/obscura-postgres
-            namespace: obscura
+            job: ${app_namespace}/obscura-postgres
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               PostgreSQL replica {{ $labels.pod }} is not streaming
@@ -74,14 +74,14 @@ spec:
         - alert: CloudNativePGReplicationLagHigh
           expr: >-
             cnpg_pg_replication_lag{
-              job="obscura/obscura-postgres"
+              job="${app_namespace}/obscura-postgres"
             } > 300
           for: 2m
           labels:
             severity: warning
             cnpg_cluster: obscura-postgres
-            job: obscura/obscura-postgres
-            namespace: obscura
+            job: ${app_namespace}/obscura-postgres
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               PostgreSQL replica {{ $labels.pod }} is over five minutes behind
@@ -91,20 +91,20 @@ spec:
         - alert: CloudNativePGSynchronousReplicasUnavailable
           expr: >-
             cnpg_collector_sync_replicas{
-              job="obscura/obscura-postgres",
+              job="${app_namespace}/obscura-postgres",
               value="observed"
             }
             < ignoring(value)
             cnpg_collector_sync_replicas{
-              job="obscura/obscura-postgres",
+              job="${app_namespace}/obscura-postgres",
               value="expected"
             }
           for: 1m
           labels:
-            severity: critical
+            severity: ${availability_severity}
             cnpg_cluster: obscura-postgres
-            job: obscura/obscura-postgres
-            namespace: obscura
+            job: ${app_namespace}/obscura-postgres
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               CloudNativePG cluster obscura-postgres lacks synchronous replicas
@@ -117,14 +117,14 @@ spec:
         - alert: CloudNativePGLongRunningTransaction
           expr: >-
             cnpg_backends_max_tx_duration_seconds{
-              job="obscura/obscura-postgres"
+              job="${app_namespace}/obscura-postgres"
             } > 300
           for: 1m
           labels:
             severity: warning
             cnpg_cluster: obscura-postgres
-            job: obscura/obscura-postgres
-            namespace: obscura
+            job: ${app_namespace}/obscura-postgres
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               PostgreSQL transaction on {{ $labels.pod }} exceeds five minutes
@@ -135,15 +135,15 @@ spec:
           expr: >-
             max by (namespace, job, datname) (
               cnpg_pg_database_xid_age{
-                job="obscura/obscura-postgres"
+                job="${app_namespace}/obscura-postgres"
               }
             ) > 300000000
           for: 5m
           labels:
             severity: warning
             cnpg_cluster: obscura-postgres
-            job: obscura/obscura-postgres
-            namespace: obscura
+            job: ${app_namespace}/obscura-postgres
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               PostgreSQL database {{ $labels.datname }} has high transaction ID age
@@ -156,7 +156,7 @@ spec:
             sum by (namespace, job, datname) (
               increase(
                 cnpg_pg_stat_database_deadlocks{
-                  job="obscura/obscura-postgres",
+                  job="${app_namespace}/obscura-postgres",
                   datname!=""
                 }[10m]
               )
@@ -164,8 +164,8 @@ spec:
           labels:
             severity: warning
             cnpg_cluster: obscura-postgres
-            job: obscura/obscura-postgres
-            namespace: obscura
+            job: ${app_namespace}/obscura-postgres
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               PostgreSQL deadlocks detected in {{ $labels.datname }}
@@ -175,14 +175,14 @@ spec:
         - alert: CloudNativePGMetricsCollectionError
           expr: >-
             cnpg_collector_last_collection_error{
-              job="obscura/obscura-postgres"
+              job="${app_namespace}/obscura-postgres"
             } == 1
           for: 2m
           labels:
             severity: warning
             cnpg_cluster: obscura-postgres
-            job: obscura/obscura-postgres
-            namespace: obscura
+            job: ${app_namespace}/obscura-postgres
+            namespace: ${app_namespace}
           annotations:
             summary: >-
               CloudNativePG metrics collection failed on {{ $labels.pod }}
