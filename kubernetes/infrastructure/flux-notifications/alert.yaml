@@ -17,6 +17,8 @@ spec:
       name: "*"
     - kind: HelmRepository
       name: "*"
+    - kind: OCIRepository
+      name: "*"
     - kind: Kustomization
       name: "*"
   eventMetadata:
