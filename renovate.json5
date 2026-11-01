@@ -104,10 +104,12 @@
       enabled: false,
     },
     {
-      description: 'Obscura dev is the staging environment: its updates get a PR of their own',
+      description: 'Obscura dev is the staging environment: its updates get a PR of their own and automerge once CI passes',
       matchFileNames: ['kubernetes/apps/obscura/dev/**'],
       additionalBranchPrefix: 'obscura-dev-',
       commitMessageSuffix: '(dev)',
+      dependencyDashboardApproval: false,
+      automerge: true,
     },
     {
       description: 'Obscura prod chart updates wait until the upstream release is three days old; promote after testing in dev',
