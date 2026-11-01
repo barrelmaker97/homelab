@@ -1,4 +1,30 @@
 ---
+# DNSSEC validation fails when the clock is skewed (such as on a Pi booting
+# after a power outage), and resolving an NTP hostname would itself need
+# unbound. Point systemd-timesyncd at the router's literal IP first.
+- name: Create timesyncd drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/timesyncd.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configure timesyncd NTP server
+  ansible.builtin.template:
+    src: ntp.conf.j2
+    dest: /etc/systemd/timesyncd.conf.d/ntp.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart systemd-timesyncd
+
+- name: Ensure systemd-timesyncd is enabled and started
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    enabled: true
+    state: started
+
 - name: Install unbound
   ansible.builtin.apt:
     name: unbound

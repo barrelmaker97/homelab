@@ -16,7 +16,7 @@
 - name: Generate User Private Key
   community.crypto.openssl_privatekey:
     path: "{{ user_key }}"
-    size: 2048
+    type: Ed25519
 
 - name: Generate User CSR
   community.crypto.openssl_csr:
@@ -24,60 +24,79 @@
     privatekey_path: "{{ user_key }}"
     common_name: "{{ user_name }}"
 
-- name: Get admin kubeconfig
-  changed_when: true
-  ansible.builtin.command: talosctl -e {{ cluster_vip }} -n {{ cluster_vip }} kubeconfig -f
+# Written to a temporary file so the bootstrap admin credentials never land in
+# ~/.kube/config or linger if a task below fails.
+- name: Create temporary file for admin kubeconfig
+  ansible.builtin.tempfile:
+    state: file
+    suffix: .kubeconfig
+  register: user_admin_kubeconfig
 
-- name: Delete Any Existing User CSR Objects
-  kubernetes.core.k8s:
-    state: absent
-    api_version: certificates.k8s.io/v1
-    kind: CertificateSigningRequest
-    name: "{{ user_name }}"
+- name: Issue user certificate with admin kubeconfig
+  environment:
+    KUBECONFIG: "{{ user_admin_kubeconfig.path }}"
+  block:
+    - name: Get admin kubeconfig
+      changed_when: true
+      ansible.builtin.command: >
+        talosctl -e {{ cluster_vip }} -n {{ cluster_vip }}
+        kubeconfig -f {{ user_admin_kubeconfig.path }}
 
-- name: Create User CSR Object
-  kubernetes.core.k8s:
-    state: present
-    definition: "{{ lookup('template', 'csr-user.yaml.j2') | from_yaml }}"
-  vars:
-    user_csr_base64: "{{ lookup('file', user_csr) | b64encode }}"
+    - name: Delete Any Existing User CSR Objects
+      kubernetes.core.k8s:
+        state: absent
+        api_version: certificates.k8s.io/v1
+        kind: CertificateSigningRequest
+        name: "{{ user_name }}"
 
-- name: Approve User CSR
-  ansible.builtin.command: kubectl certificate approve {{ user_name }}
-  changed_when: true
+    - name: Create User CSR Object
+      kubernetes.core.k8s:
+        state: present
+        definition: "{{ lookup('template', 'csr-user.yaml.j2') | from_yaml }}"
+      vars:
+        user_csr_base64: "{{ lookup('file', user_csr) | b64encode }}"
 
-- name: Get User Certificate
-  kubernetes.core.k8s_info:
-    api_version: certificates.k8s.io/v1
-    kind: CertificateSigningRequest
-    name: "{{ user_name }}"
-  register: user_cert
+    - name: Approve User CSR
+      ansible.builtin.command: kubectl certificate approve {{ user_name }}
+      changed_when: true
 
-- name: Get Cluster Certificate
-  kubernetes.core.k8s_info:
-    api_version: v1
-    kind: ConfigMap
-    name: kube-root-ca.crt
-    namespace: kube-system
-  register: user_cluster_cert
+    - name: Get User Certificate
+      kubernetes.core.k8s_info:
+        api_version: certificates.k8s.io/v1
+        kind: CertificateSigningRequest
+        name: "{{ user_name }}"
+      register: user_cert
 
-- name: Save User Certificate
-  ansible.builtin.copy:
-    content: "{{ user_cert.resources[0].status.certificate | b64decode }}"
-    dest: "{{ user_crt }}"
-    mode: "0644"
+    - name: Get Cluster Certificate
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: ConfigMap
+        name: kube-root-ca.crt
+        namespace: kube-system
+      register: user_cluster_cert
 
-- name: Save Cluster Certificate
-  ansible.builtin.copy:
-    content: "{{ user_cluster_cert.resources[0]['data']['ca.crt'] }}"
-    dest: "{{ user_api_crt }}"
-    mode: "0644"
+    - name: Save User Certificate
+      ansible.builtin.copy:
+        content: "{{ user_cert.resources[0].status.certificate | b64decode }}"
+        dest: "{{ user_crt }}"
+        mode: "0644"
 
-- name: Create User Cluster Role Binding
-  kubernetes.core.k8s:
-    state: present
-    definition: >-
-      {{ lookup('template', 'clusterrolebinding-user.yaml.j2') | from_yaml }}
+    - name: Save Cluster Certificate
+      ansible.builtin.copy:
+        content: "{{ user_cluster_cert.resources[0]['data']['ca.crt'] }}"
+        dest: "{{ user_api_crt }}"
+        mode: "0644"
+
+    - name: Create User Cluster Role Binding
+      kubernetes.core.k8s:
+        state: present
+        definition: >-
+          {{ lookup('template', 'clusterrolebinding-user.yaml.j2') | from_yaml }}
+  always:
+    - name: Remove temporary admin kubeconfig
+      ansible.builtin.file:
+        path: "{{ user_admin_kubeconfig.path }}"
+        state: absent
 
 - name: Create User Kubeconfig
   ansible.builtin.template:
