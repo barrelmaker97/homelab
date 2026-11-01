@@ -23,20 +23,35 @@
   register: dewpoint_installed
   changed_when: false
   failed_when: false
+  check_mode: false
 
-- name: Download dewpoint package
-  ansible.builtin.get_url:
-    url: "https://github.com/barrelmaker97/dewpoint/releases/download/v{{ dewpoint_version }}/dewpoint_{{ dewpoint_version }}_arm64.deb"
-    dest: "/tmp/dewpoint_{{ dewpoint_version }}_arm64.deb"
-    owner: root
-    group: root
-    mode: '0644'
+# Verified against the SHA-256 digest GitHub records on the release asset.
+- name: Install dewpoint release
   when: dewpoint_installed.stdout != dewpoint_version
+  vars:
+    dewpoint_deb: "dewpoint_{{ dewpoint_version }}_arm64.deb"
+  block:
+    - name: Get dewpoint release metadata
+      ansible.builtin.uri:
+        url: "https://api.github.com/repos/barrelmaker97/dewpoint/releases/tags/v{{ dewpoint_version }}"
+        return_content: true
+      register: dewpoint_release
+      check_mode: false
 
-- name: Install dewpoint package
-  ansible.builtin.apt:
-    deb: "/tmp/dewpoint_{{ dewpoint_version }}_arm64.deb"
-  when: dewpoint_installed.stdout != dewpoint_version
+    - name: Download dewpoint package
+      ansible.builtin.get_url:
+        url: "https://github.com/barrelmaker97/dewpoint/releases/download/v{{ dewpoint_version }}/{{ dewpoint_deb }}"
+        dest: "/tmp/{{ dewpoint_deb }}"
+        checksum: "{{ (dewpoint_release.json.assets | selectattr('name', 'eq', dewpoint_deb) | first).digest }}"
+        owner: root
+        group: root
+        mode: '0644'
+
+    # Check mode downloads nothing, so there is nothing to install
+    - name: Install dewpoint package
+      ansible.builtin.apt:
+        deb: "/tmp/{{ dewpoint_deb }}"
+      when: not ansible_check_mode
 
 - name: Create systemd drop-in directory
   ansible.builtin.file:

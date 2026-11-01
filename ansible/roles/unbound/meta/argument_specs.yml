@@ -3,10 +3,15 @@ argument_specs:
   main:
     short_description: Install and configure the unbound recursive resolver
     description:
-      - Installs unbound, downloads the root hints, and copies every .conf file
-        from files/ into /etc/unbound/unbound.conf.d.
+      - Points systemd-timesyncd at the LAN NTP server by IP so DNSSEC
+        validation has an accurate clock without relying on DNS, then installs
+        unbound, downloads the root hints, and copies every .conf file from
+        files/ into /etc/unbound/unbound.conf.d.
       - >-
-        Takes no arguments. Configuration is held in the files/ directory rather
-        than in variables, and handlers are flushed before subsequent roles run
-        so Pi-hole finds a working upstream resolver on port 5335.
-    options: {}
+        Handlers are flushed before subsequent roles run so Pi-hole finds a
+        working upstream resolver on port 5335.
+    options:
+      ntp_server:
+        description: NTP server IP address systemd-timesyncd syncs against.
+        type: str
+        required: true

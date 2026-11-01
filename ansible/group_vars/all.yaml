@@ -44,3 +44,6 @@ nut_user: remoteuser
 nut_password: >-
   {{ (lookup('community.sops.sops', playbook_dir ~ '/vars/nut.sops.yaml')
       | from_yaml).remoteuser_password }}
+
+# Local NTP server (openwrt), used by the Talos nodes and the DNS hosts.
+ntp_server: "{{ lan_hosts.openwrt }}"
