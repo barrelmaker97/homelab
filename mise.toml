@@ -20,7 +20,7 @@ kubeconform = "0.8.0"
 
 # Ansible commands and lint share one environment. The collections are pinned
 # in ansible/requirements.yml; kubernetes.core needs the kubernetes library.
-python = "3.14.8"
+python = "3.15.2"
 uv = "0.13.6"
 
 [tools."pypi:ansible-lint"]
