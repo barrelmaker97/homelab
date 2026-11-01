@@ -104,6 +104,7 @@ spec:
   path: ./kubernetes/apps/valheim
   prune: true
   dependsOn:
+    - name: monitoring-prereq
     - name: barrelmaker
     - name: longhorn-config
 ---
