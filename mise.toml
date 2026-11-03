@@ -25,7 +25,7 @@ uv = "0.13.7"
 
 [tools."pypi:ansible-lint"]
 version = "26.10.1"
-with = ["ansible-core==2.21.5", "kubernetes"]
+with = ["ansible-core==2.22.0", "kubernetes"]
 expose = ["ansible-core"]
 
 [tasks.collections]
