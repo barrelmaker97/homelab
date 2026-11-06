@@ -257,6 +257,8 @@ point is the VIP (`192.168.15.80`), which keepalived prefers on castor. Every
 and `wg0` is up. A check that fails twice in a row takes 60 off that host's
 priority (castor 150, pollux 100). A failing check on castor moves the VIP to
 pollux if pollux is healthy; castor takes it back after recovery.
+Pi-hole ignores localhost queries, which keeps these checks out of its query
+log and statistics.
 
 `dns.yaml` installs Pi-hole once and manages it from
 `ansible/roles/pihole/defaults/main.yml`. It reconciles adlists, groups, clients
