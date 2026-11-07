@@ -8,8 +8,6 @@ wireguard_peer_keys: "{{ wireguard_secrets.secrets.peers }}"
 # Each peer needs public_key and preshared_key under its name in
 # wireguard.sops.yaml, and one address in the VPN subnet.
 wireguard_peers:
-  - name: fonso
-    allowed_ips: 10.33.167.2/32
   - name: macbook
     allowed_ips: 10.33.167.6/32
   - name: s26
