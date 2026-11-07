@@ -41,6 +41,11 @@ spec:
     metrics:
       serviceMonitor:
         enabled: true
+        metricRelabelings:
+          - action: drop
+            regex: longhorn_(rest_client|workqueue)_.*
+            sourceLabels:
+              - __name__
     defaultSettings:
       allowVolumeCreationWithDegradedAvailability: false
       backupTarget: "nfs://soteria.lan:/volume1/longhorn-backupstore"
