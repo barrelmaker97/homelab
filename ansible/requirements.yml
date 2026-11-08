@@ -7,7 +7,7 @@ collections:
     version: "6.6.0"
   # sops lookup
   - name: community.sops
-    version: "2.5.0"
+    version: "2.5.1"
   # openssl_privatekey, openssl_csr
   - name: community.crypto
     version: "3.5.1"
