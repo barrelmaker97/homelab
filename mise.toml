@@ -24,7 +24,7 @@ python = "3.15.2"
 uv = "0.13.7"
 
 [tools."pypi:ansible-lint"]
-version = "26.10.1"
+version = "26.11.0"
 with = ["ansible-core==2.22.0", "kubernetes"]
 expose = ["ansible-core"]
 
